@@ -7,6 +7,7 @@
 using namespace std;
 
 int last_dir;
+bool gameover;
 
 int MoveUP(int map[][45], vector<vector<int> >& snake) {
     vector<int> tmp;
@@ -81,6 +82,31 @@ int MoveLAST(int map[][45], vector<vector<int> >& snake) {
     return 0;
 }
 
+void GenerateGrowth(int map[][45]) {
+    int x = rand() % 24;
+    int y = rand() % 45;
+    if(map[x][y] == 0) {
+        map[x][y] = 5;  // 5 는 GROWTH ITEM
+    } else { 
+        GenerateGrowth(map);
+    }
+}
+void GeneratePoison(int map[][45]) {
+    int x = rand() % 24;
+    int y = rand() % 45;
+    if (map[x][y] == 0) {
+        map[x][y] = 6;  // 6 은 POISON ITEM
+    } else {
+        GeneratePoison(map);
+    }
+}
+
+void GameOver(WINDOW* board) {
+    gameover = true;
+    mvwprintw(board, 10, 10, "Game Over!");
+    refresh();
+}
+
 int main()
 {
     initscr(); // Curses 모드시작
@@ -132,10 +158,15 @@ int main()
     M.map[snake[1][0]][snake[1][1]] = 4;
     M.map[snake[2][0]][snake[2][1]] = 4;
     
-    while (1) {
+
+
+    gameover = false;
+    while (!gameover) {
         werase(board);
         box(board, 0, 0);
 
+        GenerateGrowth(M.map);
+        GeneratePoison(M.map);
 
         for(int i = 0; i < 24; i++) {
             for(int j = 0; j < 45; j++) {
@@ -144,27 +175,37 @@ int main()
                     case 0:
                         wattron(board, COLOR_PAIR(2));
                         mvwprintw(board, i, j, " ");
-                        wattroff(board, COLOR_PAIR(2)); // wattron이 아닌 wattroff 사용
+                        wattroff(board, COLOR_PAIR(2));
                         break;
                     case 1:  // WALL : 검정색
                         wattron(board, COLOR_PAIR(3));
                         mvwprintw(board, i, j, " ");
-                        wattroff(board, COLOR_PAIR(3)); // wattron이 아닌 wattroff 사용
+                        wattroff(board, COLOR_PAIR(3));
                         break;
                     case 2:
                         wattron(board, COLOR_PAIR(3));
                         mvwprintw(board, i, j, " ");
-                        wattroff(board, COLOR_PAIR(3)); // wattron이 아닌 wattroff 사용
+                        wattroff(board, COLOR_PAIR(3));
                         break;
                     case 3:
                         wattron(board, COLOR_PAIR(4));
                         mvwprintw(board, i, j, "H");
-                        wattroff(board, COLOR_PAIR(4)); // wattron이 아닌 wattroff 사용
+                        wattroff(board, COLOR_PAIR(4));
                         break;
                     case 4:
                         wattron(board, COLOR_PAIR(4));
                         mvwprintw(board, i, j, "O");
-                        wattroff(board, COLOR_PAIR(4)); // wattron이 아닌 wattroff 사용
+                        wattroff(board, COLOR_PAIR(4));
+                        break;
+                    case 5:
+                        wattron(board, COLOR_PAIR(4));
+                        mvwprintw(board, i, j, "G");
+                        wattroff(board, COLOR_PAIR(4));
+                        break;
+                    case 6:
+                        wattron(board, COLOR_PAIR(4));
+                        mvwprintw(board, i, j, "P");
+                        wattroff(board, COLOR_PAIR(4));
                         break;
                     default:
                         break;
@@ -192,18 +233,16 @@ int main()
             break;
         }
 
+        
+        for(int i = 1; i < 23; i++)
+            for(int j = 1; j < 44; j++)
+                M.map[i][j] = 0;
+
         M.map[snake[0][0]][snake[0][1]] = 3;
-        M.map[snake[1][0]][snake[1][1]] = 4;
-        M.map[snake[2][0]][snake[2][1]] = 4;
         
+        for(int i = 1; i < snake.size(); i++)
+            M.map[snake[i][0]][snake[i][1]] = 4;
         
-        // for(int i = 0; i < 24; i++) {
-        //     for(int j = 0; j < 45; j++) {
-        //         if (M.map[i][j] == 3 || M.map[i][j] == 4) {
-        //             M.map[i][j] = 0;
-        //         }
-        //     }
-        // }
         wrefresh(board);
     }
 
