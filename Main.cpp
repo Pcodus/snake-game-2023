@@ -1,20 +1,91 @@
 #include <ncurses.h>
 #include <vector>
 #include "map.h"
-#include "snakeMove.cpp"
+// #include "snakeMove.cpp"
 
 #define W 100
 #define H 30
-#define KEY_UP 259
-#define KEY_DOWN 258
-#define KEY_LEFT 260
-#define KEY_RIGHT 261
 using namespace std;
+
+int last_dir;
+
+int MoveUP(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][0]--;
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_UP;
+}
+
+int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][0]++;
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_DOWN;
+}
+
+int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][1]--;
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_LEFT;
+}
+
+int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][1]++;
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }   
+    return KEY_RIGHT;
+}
+
+int MoveLAST(int map[][45], vector<vector<int> >& snake) {
+    switch(snake[0][0] - snake[1][0]) {
+        case 1:
+            return MoveDOWN(map,snake);
+        case -1:
+            return MoveUP(map,snake);
+        case 0:
+            switch(snake[0][1] - snake[1][1]) {
+                case 1:
+                    return MoveRIGHT(map,snake);
+                case -1:
+                    return MoveLEFT(map,snake);
+            }
+    }
+    return 0;
+}
 
 int main()
 {
     initscr(); // Curses 모드시작
     start_color(); // Color 사용선언
+    noecho();
+    cbreak();
+    nodelay(stdscr, true);
+    keypad(stdscr, true);
   
     // 전체 윈도우 생성
     WINDOW *back = subwin(stdscr, H, W, 0, 0);
@@ -25,7 +96,7 @@ int main()
     attroff(COLOR_PAIR(1));
   
     // SnakeBoard 생성
-    init_pair(2, COLOR_BLACK, COLOR_BLACK);
+    init_pair(2, COLOR_WHITE, COLOR_WHITE);
     WINDOW *board = subwin(stdscr, 24, 45, 3, 5 ); 
     box(board, 0, 0);
     attron(COLOR_PAIR(2));
@@ -33,44 +104,21 @@ int main()
     attroff(COLOR_PAIR(2));
     
     MAP M;
-    init_pair(3, COLOR_WHITE, COLOR_BLUE);
-    for(int i = 0; i < 24; i++) {
-      for(int j = 0; j < 45; j++) {
-          switch (M.map[i][j])
-          {
-          case 0:
-              wattron(board, COLOR_PAIR(2));
-              mvwprintw(board, i, j, " ");
-              wattron(board, COLOR_PAIR(2));
-              break;
-          case 1:  // WALL : 파란색
-              wattron(board, COLOR_PAIR(3));
-              mvwprintw(board, i, j, " ");
-              wattron(board, COLOR_PAIR(3));
-              break;
-          case 2:
-              wattron(board, COLOR_PAIR(3));
-              mvwprintw(board, i, j, " ");
-              wattron(board, COLOR_PAIR(3));
-              break;
-          default:
-              break;
-          }
-      }
-    }
-
+    init_pair(3, COLOR_WHITE, COLOR_BLACK);
+    init_pair(4, COLOR_BLACK, COLOR_WHITE);
     // ScoreBoard 생성
     WINDOW *score = subwin(stdscr, 10, 45, 3, 55); 
     box(score, 0, 0);
-    attron(COLOR_PAIR(2));
-    wbkgd(score, COLOR_PAIR(2));
+    attron(COLOR_PAIR(3));
+    wbkgd(score, COLOR_PAIR(3));
   
     // MissionBoard 생성
     WINDOW *mission = subwin(stdscr, 12, 45, 15, 55); 
     box(mission, 0, 0);
-    attron(COLOR_PAIR(2));
-    wbkgd(mission, COLOR_PAIR(2));
-    
+    attron(COLOR_PAIR(3));
+    wbkgd(mission, COLOR_PAIR(3));
+
+
 
     // make snake Body 
     vector<vector<int>> snake(3);
@@ -78,44 +126,106 @@ int main()
     snake[1] = {12, 21};
     snake[2] = {12, 20};
 
-    int input = getch();
-    int state;
-    switch (input)
-    {
-    case KEY_UP:
-        state = 1;
-        break;
-    case KEY_DOWN:
-        state = 2; 
-        break;
-    case KEY_LEFT:
-        state = 3; 
-        break;
-    case KEY_RIGHT:
-        state = 4; 
-        break;
-    default:
-        state = 5;
-        break;
+    M.map[snake[0][0]][snake[0][1]] = 3;
+    M.map[snake[1][0]][snake[1][1]] = 4;
+    M.map[snake[2][0]][snake[2][1]] = 4;
+
+    for(int i = 0; i < 24; i++) {
+        for(int j = 0; j < 45; j++) {
+            switch (M.map[i][j])
+            {
+                case 0:
+                    wattron(board, COLOR_PAIR(2));
+                    mvwprintw(board, i, j, " ");
+                    wattroff(board, COLOR_PAIR(2)); // wattron이 아닌 wattroff 사용
+                    break;
+                case 1:  // WALL : 검정색
+                    wattron(board, COLOR_PAIR(3));
+                    mvwprintw(board, i, j, " ");
+                    wattroff(board, COLOR_PAIR(3)); // wattron이 아닌 wattroff 사용
+                    break;
+                case 2:
+                    wattron(board, COLOR_PAIR(3));
+                    mvwprintw(board, i, j, " ");
+                    wattroff(board, COLOR_PAIR(3)); // wattron이 아닌 wattroff 사용
+                    break;
+                case 3:
+                    wattron(board, COLOR_PAIR(4));
+                    mvwprintw(board, i, j, "H");
+                    wattroff(board, COLOR_PAIR(4)); // wattron이 아닌 wattroff 사용
+                    break;
+                case 4:
+                    wattron(board, COLOR_PAIR(4));
+                    mvwprintw(board, i, j, "B");
+                    wattroff(board, COLOR_PAIR(4)); // wattron이 아닌 wattroff 사용
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
-    if(state == 1){
-        MoveUP(M.map, snake);
-    }
-    else if(state == 2){
-        MoveDOWN(M.map, snake);
-    }
-    else if(state == 3){
-        MoveLEFT(M.map, snake);
-    }
-    else if(state == 4){
-        MoveRIGHT(M.map, snake);
-    }
+    while (true) {
+        werase(board);
+        box(board, 0, 0);
 
+        int input = getch();
+        switch (input)
+        {
+        case KEY_UP:
+            last_dir = MoveUP(M.map, snake);
+            break;
+        case KEY_DOWN:
+            last_dir = MoveDOWN(M.map, snake);
+            break;
+        case KEY_LEFT:
+            last_dir = MoveLEFT(M.map, snake);
+            break;
+        case KEY_RIGHT:
+            last_dir = MoveRIGHT(M.map, snake);
+            break;
+        default:
+            last_dir = MoveLAST(M.map, snake);
+            break;
+        }
 
-
-    refresh();
-    getch(); // 사용자입력대기
+        for(int i = 0; i < 24; i++) {
+            for(int j = 0; j < 45; j++) {
+                switch (M.map[i][j])
+                {
+                    case 0:
+                        wattron(board, COLOR_PAIR(2));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(2)); // wattron이 아닌 wattroff 사용
+                        break;
+                    case 1:  // WALL : 검정색
+                        wattron(board, COLOR_PAIR(3));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(3)); // wattron이 아닌 wattroff 사용
+                        break;
+                    case 2:
+                        wattron(board, COLOR_PAIR(3));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(3)); // wattron이 아닌 wattroff 사용
+                        break;
+                    case 3:
+                        wattron(board, COLOR_PAIR(4));
+                        mvwprintw(board, i, j, "H");
+                        wattroff(board, COLOR_PAIR(4)); // wattron이 아닌 wattroff 사용
+                        break;
+                    case 4:
+                        wattron(board, COLOR_PAIR(4));
+                        mvwprintw(board, i, j, "B");
+                        wattroff(board, COLOR_PAIR(4)); // wattron이 아닌 wattroff 사용
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        wrefresh(board);
+    }
+    // getch(); // 사용자입력대기
     endwin(); // Curses 모드종료
   
     return 0;
