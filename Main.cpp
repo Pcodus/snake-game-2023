@@ -346,9 +346,9 @@ int main()
     snake[1] = {12, 21};
     snake[2] = {12, 20};
 
-    M.map[snake[0][0]][snake[0][1]] = 3;
-    M.map[snake[1][0]][snake[1][1]] = 4;
-    M.map[snake[2][0]][snake[2][1]] = 4;
+    M.map[level][snake[0][0]][snake[0][1]] = 3;
+    M.map[level][snake[1][0]][snake[1][1]] = 4;
+    M.map[level][snake[2][0]][snake[2][1]] = 4;
     
     signal(SIGALRM,sig_alarm);
 
@@ -365,11 +365,11 @@ int main()
 
     int gateSig = 10;
     level = 3;
-    MapLevel(M.map,level);
+    // MapLevel(M.map[level],level);
 
     for(int i = 0; i < 24; i++) {
             for(int j = 0; j < 45; j++) {
-                switch (M.map[i][j])
+                switch (M.map[level][i][j])
                 {
                     case 0:
                         wattron(board, COLOR_PAIR(2));
@@ -424,14 +424,14 @@ int main()
         // 맵 초기화
         for(int i = 1; i < 23; i++)
             for(int j = 1; j < 44; j++) {
-                if(M.map[i][j] != 1 && M.map[i][j] != 7)
-                    M.map[i][j] = 0;
+                if(M.map[level][i][j] != 1 && M.map[level][i][j] != 7)
+                    M.map[level][i][j] = 0;
             }
 
         for (int i = 0; i < growitems.size(); i++)
-            M.map[growitems[i].x][growitems[i].y] = 5;
+            M.map[level][growitems[i].x][growitems[i].y] = 5;
         for (int i = 0; i < poisonitems.size(); i++)
-            M.map[poisonitems[i].x][poisonitems[i].y] = 6;
+            M.map[level][poisonitems[i].x][poisonitems[i].y] = 6;
         
         maxsize = maxsize <= snake.size() ? snake.size() : maxsize;
         // 보드 초기화
@@ -449,21 +449,21 @@ int main()
         // mission_gatePoint += goal_gatePoint <=  ? " (v)" : " ( )";   
 
         for (int i = 0; i < gatelist.size(); i++) {
-            M.map[gatelist[i].gate1[0].first][gatelist[i].gate1[0].second] = 7;
-            M.map[gatelist[i].gate2[0].first][gatelist[i].gate2[0].second] = 7;
+            M.map[level][gatelist[i].gate1[0].first][gatelist[i].gate1[0].second] = 7;
+            M.map[level][gatelist[i].gate2[0].first][gatelist[i].gate2[0].second] = 7;
         }
 
-        M.map[snake[0][0]][snake[0][1]] = 3;
+        M.map[level][snake[0][0]][snake[0][1]] = 3;
         for(int i = 1; i < snake.size(); i++)
-            M.map[snake[i][0]][snake[i][1]] = 4;
+            M.map[level][snake[i][0]][snake[i][1]] = 4;
 
         // 아이템 5초마다 생성
         currenttime = time(NULL);  // 현재 시간을 가져옴
         if (currenttime - tmp >= itemSig) { // 5초가 지나면
-            GenerateGrowth(M.map);
-            GenerateGrowth(M.map);
-            GeneratePoison(M.map);
-            GeneratePoison(M.map);
+            GenerateGrowth(M.map[level]);
+            GenerateGrowth(M.map[level]);
+            GeneratePoison(M.map[level]);
+            GeneratePoison(M.map[level]);
             tmp = currenttime;  // item 생성한 시간 업데이트
         }
 
@@ -475,13 +475,13 @@ int main()
 
         for (vector<G>::iterator it = growitems.begin(); it != growitems.end();) {
             if (it->dur == 5000000/speed) {
-                M.map[it->x][it->y] = 0;
+                M.map[level][it->x][it->y] = 0;
                 it = growitems.erase(it);
             } else { ++it; }
         }
         for (vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end();) {
             if (it->dur == 5000000/speed) {
-                M.map[it->x][it->y] = 0;
+                M.map[level][it->x][it->y] = 0;
                 it = poisonitems.erase(it);
             } else { ++it; }
         }
@@ -489,7 +489,7 @@ int main()
         // Gate 10초마다 생성
         // Gate는 map에 7로 표시
         if (currenttime - tmp2 >= gateSig) { // 10초가 지나면
-            MakeGate(M.map);
+            MakeGate(M.map[level]);
             tmp2 = currenttime;  // gate 생성한 시간 업데이트
         }
 
@@ -498,8 +498,8 @@ int main()
             it->dur++;
         for (vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end();) {
             if (it->dur == 10000000/speed) {
-                M.map[it->gate1[0].first][it->gate1[0].second] = 1;
-                M.map[it->gate2[0].first][it->gate2[0].second] = 1;
+                M.map[level][it->gate1[0].first][it->gate1[0].second] = 1;
+                M.map[level][it->gate2[0].first][it->gate2[0].second] = 1;
                 it = gatelist.erase(it);
             } else { ++it; }
         }
@@ -508,7 +508,7 @@ int main()
 
         for(int i = 0; i < 24; i++) {
             for(int j = 0; j < 45; j++) {
-                switch (M.map[i][j])
+                switch (M.map[level][i][j])
                 {
                     case 0:
                         wattron(board, COLOR_PAIR(2));
@@ -589,19 +589,19 @@ int main()
         switch (cur_dir)
         {
         case KEY_UP:
-            last_dir = MoveUP(M.map, snake);
+            last_dir = MoveUP(M.map[level], snake);
             break;
         case KEY_DOWN:
-            last_dir = MoveDOWN(M.map, snake);
+            last_dir = MoveDOWN(M.map[level], snake);
             break;
         case KEY_LEFT:
-            last_dir = MoveLEFT(M.map, snake);
+            last_dir = MoveLEFT(M.map[level], snake);
             break;
         case KEY_RIGHT:
-            last_dir = MoveRIGHT(M.map, snake);
+            last_dir = MoveRIGHT(M.map[level], snake);
             break;
         default:
-            last_dir = MoveLAST(M.map, snake);
+            last_dir = MoveLAST(M.map[level], snake);
             break;
         }
 
@@ -612,7 +612,7 @@ int main()
         if(snake.size() < 3) {
             gameover = true;
             break;    
-        } else if(M.map[snake[0][0]][snake[0][1]] == 1) {
+        } else if(M.map[level][snake[0][0]][snake[0][1]] == 1) {
             gameover = true;
             break;
         } else if(last_dir == 9999) {
