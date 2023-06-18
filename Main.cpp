@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <iostream>
 
-#define speed 500000
+#define speed 200000
 #define W 100
 #define H 30
 using namespace std;
@@ -43,18 +43,20 @@ int MoveUP(int map[][45], vector<vector<int> >& snake) {
     if(map[snake[0][0]][snake[0][1]] == 5) {
         snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
         snake[1][0]++;
-        // 이 좌표의 아이템 벡터를 찾아야댐
         for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
             if(it->x == snake[0][0] && it->y == snake[0][1]){
                 growitems.erase(it);
                 return KEY_UP;
             }
         }
-        // 그리고 그 아이템 벡터 삭제
-        
-    } 
+    }
     else if(map[snake[0][0]][snake[0][1]] == 6) {
         snake.pop_back();
+        for(int i = 1; i < snake.size(); i++) {
+            tmp = snake[i];
+            snake[i] = head;
+            head = tmp;
+        }
         for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
             if(it->x == snake[0][0] && it->y == snake[0][1]){
                 poisonitems.erase(it);
@@ -84,12 +86,22 @@ int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
         for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
             if(it->x == snake[0][0] && it->y == snake[0][1]){
                 growitems.erase(it);
+                for(int i = 1; i < snake.size(); i++) {
+                    tmp = snake[i];
+                    snake[i] = head;
+                    head = tmp;
+                }
                 return KEY_DOWN;
             }
         }
         
     } else if(map[snake[0][0]][snake[0][1]] == 6) {
         snake.pop_back();
+        for(int i = 1; i < snake.size(); i++) {
+            tmp = snake[i];
+            snake[i] = head;
+            head = tmp;
+        }
         for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
             if(it->x == snake[0][0] && it->y == snake[0][1]){
                 poisonitems.erase(it);
@@ -125,9 +137,14 @@ int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
         
     } else if(map[snake[0][0]][snake[0][1]] == 6) {
         snake.pop_back();
+        for(int i = 1; i < snake.size(); i++) {
+            tmp = snake[i];
+            snake[i] = head;
+            head = tmp;
+        }
         for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
             if(it->x == snake[0][0] && it->y == snake[0][1]){
-                poisonitems.erase(it);
+                poisonitems.erase(it);       
                 return KEY_LEFT;
             }
         }
@@ -159,9 +176,14 @@ int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
         }
     } else if(map[snake[0][0]][snake[0][1]] == 6) {
         snake.pop_back();
+        for(int i = 1; i < snake.size(); i++) {
+            tmp = snake[i];
+            snake[i] = head;
+            head = tmp;
+        }
         for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
             if(it->x == snake[0][0] && it->y == snake[0][1]){
-                poisonitems.erase(it);
+                poisonitems.erase(it);       
                 return KEY_RIGHT;
             }
         }
@@ -439,6 +461,7 @@ int main()
     }
     if(gameover == true) {
         GameOver(board);
+        getch();
     } else {
         // 성공
     }
