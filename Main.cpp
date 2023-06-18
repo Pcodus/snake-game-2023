@@ -23,8 +23,7 @@ void GenerateGrowth(int map[][45]) {
     int x = rand() % 23 + 1;
     int y = rand() % 44 + 1;
     if (map[x][y] != 0) {
-        x = rand() % 23 + 1;
-        y = rand() % 44 + 1;
+        GenerateGrowth(map);
     }
     else {
         G item(x, y);
@@ -36,8 +35,7 @@ void GeneratePoison(int map[][45]) {
     int x = rand() % 23 + 1;
     int y = rand() % 44 + 1;
     if (map[x][y] != 0) {
-        x = rand() % 23 + 1;
-        y = rand() % 44 + 1;
+        GeneratePoison(map);
     }
     else {
         P item(x, y);
@@ -45,13 +43,6 @@ void GeneratePoison(int map[][45]) {
         map[x][y] = 6;
     }
 }
-
-// void deleteItem(int map[][45], int i) {
-//     int x = items[i].x;
-//     int y = items[i].y;
-//     map[x][y] = 0;
-//     items.erase(items.begin() + i);
-// }
 
 void GameOver(WINDOW* board) {
     gameover = true;
@@ -120,7 +111,7 @@ int main()
 
     gameover = false;
     time_t tmp = time(NULL);  // 현재 시간을 저장
-    time_t currenttime, deletetime;
+    time_t currenttime;
     int itemSig = 5;
     while (!gameover) {
         werase(board);
@@ -150,31 +141,24 @@ int main()
             tmp = currenttime;  // item 생성한 시간 업데이트
         }
 
-        // 아이템 5초 후 제거
-        deletetime = time(NULL);
-        if(deletetime - tmp >= itemSig) {
-            growitems.erase(growitems.begin());
-            poisonitems.erase(poisonitems.begin());
-            M.map[growitems[0].x][growitems[0].y] = 0;
-            M.map[poisonitems[0].x][poisonitems[0].y] = 0;
-            tmp = deletetime + 5;
+        // 5초 지나면 아이템 제거
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++)
+            it->dur++;
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++)
+            it->dur++;
+
+        for (vector<G>::iterator it = growitems.begin(); it != growitems.end();) {
+            if (it->dur == 50) {
+                M.map[it->x][it->y] = 0;
+                it = growitems.erase(it);
+            } else { ++it; }
         }
-
-
-
-        // for (int i = 0; i < growitems.size(); i++)
-        //     growitems[i].dur++;
-        // for (int i = 0; i < poisonitems.size(); i++)
-        //     growitems[i].dur++;
-
-        // for (vector<G>::iterator it = growitems.begin(); it != growitems.end(); )
-        //     if(it->dur == itemSig)
-        //         it = growitems.erase(it);
-        //     else { it++; }
-        // for (vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); )
-        //     if(it->dur == itemSig)
-        //         it = poisonitems.erase(it);
-        //     else { it++; }
+        for (vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end();) {
+            if (it->dur == 50) {
+                M.map[it->x][it->y] = 0;
+                it = poisonitems.erase(it);
+            } else { ++it; }
+        }
 
 
         // 맵 초기화 끝
@@ -228,7 +212,7 @@ int main()
         
         //시간 설정
         signum = true;
-        ualarm(100000, 0);
+        ualarm(100000, 0);  // 0.1초 마다 시그널 생성
         
         while(signum){
             int input = getch();
@@ -277,7 +261,7 @@ int main()
 
     }
     if(gameover == true) {
-        // 실패
+        GameOver(board);
     } else {
         // 성공
     }
