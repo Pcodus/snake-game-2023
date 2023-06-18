@@ -19,6 +19,8 @@ bool gameover;
 int maxsize = 3;
 int level = 0;
 bool victory[4] = {false,false,false,false};
+bool signum = true;
+int GamePoint[3] = {0,0,0};
 
 class G {
 public:
@@ -34,19 +36,40 @@ public:
     int dur;
     P(int x, int y) : x(x), y(y) { dur = 0; };
 };
+class Gatepair {
+public:
+    vector<vector<int>> gate1;
+    vector<vector<int>> gate2;
+    int dur;
+    
+    Gatepair(int x1, int y1, int x2, int y2) {
+        gate1.push_back({x1, y1});
+        gate2.push_back({x2, y2});
+        dur = 0;
+    }
+};
 
 vector<G> growitems;
 vector<P> poisonitems;
-int GamePoint[3] = {0,0,0};
 vector<Gatepair> gatelist;
 
+int MoveUP(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate);
+int MoveDOWN(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate);
+int MoveLEFT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate);
+int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate);
+int MoveLAST(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate);
+void GenerateGrowth(int map[][24][45]);
+void GeneratePoison(int map[][24][45]);
+void MakeGate(int map[][24][45]);
+int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate, int dir);
+void GameOver(WINDOW* board);
+void sig_alarm(int sig);
 
-int MoveUP(int map[][24][45], vector<vector<int> >& snake) {
+int MoveUP(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate) {
     vector<int> tmp;
     vector<int> head = snake[0];
 
     snake[0][0]--;
-    // growth, poison, hit body
     if(map[level][snake[0][0]][snake[0][1]] == 5) {
         GamePoint[0]++;
         snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
@@ -72,8 +95,16 @@ int MoveUP(int map[][24][45], vector<vector<int> >& snake) {
                 return KEY_UP;
             }
         }
-    }
-    else if(map[level][snake[0][0]][snake[0][1]] == 4) {
+    } else if(map[level][snake[0][0]][snake[0][1]] == 7) {
+        GamePoint[2]++;
+        int newdir = PassGate(map, snake, usegate, cur_dir);
+        for(int i = 1; i < snake.size(); i++) {
+            tmp = snake[i];
+            snake[i] = head;
+            head = tmp;
+        }
+        return newdir;
+    } else if(map[level][snake[0][0]][snake[0][1]] == 4) {
         return 9999;
     }
     for(int i = 1; i < snake.size(); i++) {
@@ -84,7 +115,7 @@ int MoveUP(int map[][24][45], vector<vector<int> >& snake) {
     return KEY_UP;
 }
 
-int MoveDOWN(int map[][24][45], vector<vector<int> >& snake) {
+int MoveDOWN(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate) {
     vector<int> tmp;
     vector<int> head = snake[0];
 
@@ -104,7 +135,6 @@ int MoveDOWN(int map[][24][45], vector<vector<int> >& snake) {
                 return KEY_DOWN;
             }
         }
-        
     } else if(map[level][snake[0][0]][snake[0][1]] == 6) {
         GamePoint[1]++;
         snake.pop_back();
@@ -119,8 +149,16 @@ int MoveDOWN(int map[][24][45], vector<vector<int> >& snake) {
                 return KEY_DOWN;
             }
         }
-    } 
-    else if(map[level][snake[0][0]][snake[0][1]] == 4) {
+    } else if(map[level][snake[0][0]][snake[0][1]] == 7) {
+        GamePoint[2]++;
+        int newdir = PassGate(map, snake, usegate, cur_dir);
+        for(int i = 1; i < snake.size(); i++) {
+            tmp = snake[i];
+            snake[i] = head;
+            head = tmp;
+        }   
+        return newdir;
+    } else if(map[level][snake[0][0]][snake[0][1]] == 4) {
         return 9999;
     }
     for(int i = 1; i < snake.size(); i++) {
@@ -131,7 +169,7 @@ int MoveDOWN(int map[][24][45], vector<vector<int> >& snake) {
     return KEY_DOWN;
 }
 
-int MoveLEFT(int map[][24][45], vector<vector<int> >& snake) {
+int MoveLEFT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate) {
     vector<int> tmp;
     vector<int> head = snake[0];
 
@@ -146,7 +184,6 @@ int MoveLEFT(int map[][24][45], vector<vector<int> >& snake) {
                 return KEY_LEFT;
             }
         }
-        
     } else if(map[level][snake[0][0]][snake[0][1]] == 6) {
         GamePoint[1]++;
         snake.pop_back();
@@ -161,8 +198,16 @@ int MoveLEFT(int map[][24][45], vector<vector<int> >& snake) {
                 return KEY_LEFT;
             }
         }
-    } 
-    else if(map[level][snake[0][0]][snake[0][1]] == 4) {
+    } else if(map[level][snake[0][0]][snake[0][1]] == 7) {
+        GamePoint[2]++;
+        int newdir = PassGate(map, snake, usegate, cur_dir);
+        for(int i = 1; i < snake.size(); i++) {
+            tmp = snake[i];
+            snake[i] = head;
+            head = tmp;
+        }   
+        return newdir;
+    } else if(map[level][snake[0][0]][snake[0][1]] == 4) {
         return 9999;
     }
     for(int i = 1; i < snake.size(); i++) {
@@ -173,7 +218,7 @@ int MoveLEFT(int map[][24][45], vector<vector<int> >& snake) {
     return KEY_LEFT;
 }
 
-int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake) {
+int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate) {
     vector<int> tmp;
     vector<int> head = snake[0];
 
@@ -202,8 +247,16 @@ int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake) {
                 return KEY_RIGHT;
             }
         }
-    }
-    else if(map[level][snake[0][0]][snake[0][1]] == 4) {
+    } else if(map[level][snake[0][0]][snake[0][1]] == 7) {
+        GamePoint[2]++;
+        int newdir = PassGate(map, snake, usegate, cur_dir);
+        for(int i = 1; i < snake.size(); i++) {
+            tmp = snake[i];
+            snake[i] = head;
+            head = tmp;
+        }   
+        return newdir;
+    } else if(map[level][snake[0][0]][snake[0][1]] == 4) {
         return 9999;
     }
     for(int i = 1; i < snake.size(); i++) {
@@ -214,19 +267,21 @@ int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake) {
     return KEY_RIGHT;
 }
 
-int MoveLAST(int map[][24][45], vector<vector<int> >& snake) {
+int MoveLAST(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate) {
     switch(snake[0][0] - snake[1][0]) {
         case 1:
-            return MoveDOWN(map,snake);
+            return MoveDOWN(map,snake, usegate);
         case -1:
-            return MoveUP(map,snake);
+            return MoveUP(map,snake, usegate);
         case 0:
             switch(snake[0][1] - snake[1][1]) {
                 case 1:
-                    return MoveRIGHT(map,snake);
+                    return MoveRIGHT(map,snake, usegate);
                 case -1:
-                    return MoveLEFT(map,snake);
+                    return MoveLEFT(map,snake, usegate);
             }
+        default:
+
     }
     return 0;
 }
@@ -243,6 +298,7 @@ void GenerateGrowth(int map[][24][45]) {
         map[level][x][y] = 5;
     }
 }
+
 void GeneratePoison(int map[][24][45]) {
     int x = rand() % 23 + 1;
     int y = rand() % 44 + 1;
@@ -257,30 +313,127 @@ void GeneratePoison(int map[][24][45]) {
 }
 
 void MakeGate(int map[][24][45]) {
-    int x1 = rand() % 23 + 1;
-    int y1 = rand() % 44 + 1;
-    while( !(map[level][x1][y1] == 1) ) {
-        x1 = rand() % 23 + 1;
-        y1 = rand() % 44 + 1;
-    }
-    int x2 = rand() % 23 + 1;
-    int y2 = rand() % 44 + 1;
-    while( !(map[level][x2][y2] == 1) ) {
-        x2 = rand() % 23 + 1;
-        y2 = rand() % 44 + 1;
-    }
+    int x1, y1, x2 , y2;
+    do {
+        x1 = rand() % 24;
+        y1 = rand() % 45;
+    } while(map[level][x1][y1] != 1 && map[level][x1][y1] != 7);
+    map[level][x1][y1] = 7;
+    do {
+        x2 = rand() % 24;
+        y2 = rand() % 45;
+    } while(map[level][x2][y2] != 1 && map[level][x2][y2] != 7);
+    map[level][x2][y2] = 7;
+
     Gatepair gate(x1, y1, x2, y2);
     gatelist.push_back(gate);
-    map[level][x1][y1] = map[level][x2][y2] = 7;
+}
+
+int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate, int dir) {
+    for(vector<Gatepair>::iterator it = usegate.begin(); it != usegate.end(); it++) {
+        if(it->gate1[0][0] == snake[0][0] && it->gate1[0][1] == snake[0][1]) {
+            snake[0][0] = it->gate2[0][0];
+            snake[0][1] = it->gate2[0][1];
+            break;
+        } else if(it->gate2[0][0] == snake[0][0] && it->gate2[0][1] == snake[0][1]) {
+            snake[0][0] = it->gate1[0][0];
+            snake[0][1] = it->gate1[0][1];
+            break;
+        }
+    }
+    int newdir;
+    if(snake[0][0]-- == 0) {
+        newdir = KEY_DOWN;
+    } else if(snake[0][0]++ == 23) {
+        newdir = KEY_UP;
+    } else if(snake[0][1]++ == 0) {
+        newdir = KEY_RIGHT;
+    } else if(snake[0][1]-- == 44) {
+        newdir = KEY_LEFT;
+    } else {
+        if(dir == KEY_UP) {
+            if(map[level][(snake[0][0]-1)][snake[0][1]] == 1 || map[level][(snake[0][0]-1)][snake[0][1]] == 7) {
+                if(map[level][(snake[0][0])][snake[0][1]+1] == 1 || map[level][(snake[0][0])][snake[0][1]+1] == 7) {
+                    if(map[level][(snake[0][0])][snake[0][1]-1] == 1 || map[level][(snake[0][0])][snake[0][1]-1] == 7) {
+                        snake[0][0]++;
+                        newdir = KEY_DOWN;
+                    } else {
+                        snake[0][1]--;
+                        newdir = KEY_LEFT;
+                    }
+                } else {
+                    snake[0][1]++;
+                    newdir = KEY_RIGHT;
+                }
+            } else {
+                snake[0][0]--;
+                newdir = KEY_UP;
+            }
+        } else if(dir == KEY_DOWN) {
+            if(map[level][(snake[0][0]+1)][snake[0][1]] == 1 || map[level][(snake[0][0])+1][snake[0][1]] == 7) {
+                if(map[level][(snake[0][0])][snake[0][1]-1] == 1 || map[level][(snake[0][0])][snake[0][1]-1] == 7) {
+                    if(map[level][(snake[0][0])][snake[0][1]+1] == 1 || map[level][(snake[0][0])][snake[0][1]+1] == 7) {
+                        snake[0][0]--;
+                        newdir = KEY_UP;
+                    } else {
+                        snake[0][1]++;
+                        newdir = KEY_RIGHT;
+                    }
+                } else {
+                    snake[0][1]--;
+                    newdir = KEY_LEFT;
+                }
+            } else {
+                snake[0][0]++;
+                newdir = KEY_DOWN;
+            }
+        } else if(dir == KEY_LEFT) {
+            if(map[level][(snake[0][0])][snake[0][1]-1] == 1 || map[level][(snake[0][0])][snake[0][1]-1] == 7) {
+                if(map[level][(snake[0][0]-1)][snake[0][1]] == 1 || map[level][(snake[0][0]-1)][snake[0][1]] == 7) {
+                    if(map[level][(snake[0][0]+1)][snake[0][1]] == 1 || map[level][(snake[0][0]+1)][snake[0][1]] == 7) {
+                        snake[0][1]++;
+                        newdir = KEY_RIGHT;
+                    } else {
+                        snake[0][0]++;
+                        newdir = KEY_DOWN;
+                    }
+                } else {
+                    snake[0][0]--;
+                    newdir = KEY_UP;
+                }
+            } else {
+                snake[0][1]--;
+                newdir = KEY_LEFT;
+            }
+        } else if(dir == KEY_RIGHT) {
+            if(map[level][(snake[0][0])][snake[0][1]+1] == 1 || map[level][(snake[0][0])][snake[0][1]+1] == 7) {
+                if(map[level][(snake[0][0]+1)][snake[0][0]] == 1 || map[level][(snake[0][0]+1)][snake[0][1]] == 7) {
+                    if(map[level][(snake[0][0]-1)][snake[0][1]] == 1 || map[level][(snake[0][0]-1)][snake[0][1]] == 7) {
+                        snake[0][1]--;
+                        newdir = KEY_LEFT;
+                    } else {
+                        snake[0][0]--;
+                        newdir = KEY_UP;
+                    }
+                } else {
+                    snake[0][0]++;
+                    newdir = KEY_DOWN;
+                }
+            } else {
+                snake[0][1]++;
+                newdir = KEY_RIGHT;
+            }
+        }
+    }
+    last_dir = newdir;
+    return newdir;
 }
 
 void GameOver(WINDOW* board) {
-    gameover = true;
     mvwprintw(board, 10, 10, "Game Over!");
     refresh();
 }
 
-bool signum = true;
 void sig_alarm(int sig) {
     signum = false;
 }
@@ -294,7 +447,7 @@ int main()
     nodelay(stdscr, true);
     keypad(stdscr, true);
     srand(time(NULL));
-  
+
     // 전체 윈도우 생성
     WINDOW *back = subwin(stdscr, H, W, 0, 0);
     init_pair(1, COLOR_MAGENTA, COLOR_WHITE); // 색attribute 설정
@@ -302,7 +455,7 @@ int main()
     attron(COLOR_PAIR(1)); // Attribute 적용
     wbkgd(stdscr, COLOR_PAIR(1));
     attroff(COLOR_PAIR(1));
-  
+
     // SnakeBoard 생성
     init_pair(2, COLOR_WHITE, COLOR_WHITE);
     WINDOW *board = subwin(stdscr, 24, 45, 3, 5); 
@@ -314,6 +467,7 @@ int main()
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_BLACK, COLOR_WHITE);
     init_pair(5, COLOR_CYAN, COLOR_CYAN);
+
     // ScoreBoard 생성
     WINDOW *score = subwin(stdscr, 10, 45, 3, 55); 
     box(score, 0, 0);
@@ -350,10 +504,9 @@ int main()
     int goal_snakeSize=rand()%5 + 5;
     int goal_growthPoint=rand()%5 + 5;
     int goal_poisonPoint=rand()%3 + 5;
-    int goal_gatePoint=rand()%3 ;
+    int goal_gatePoint=rand()%3 + 1;
 
     int gateSig = 10;
-    // MapLevel(M.map[level],level);
 
     for(int i = 0; i < 24; i++) {
             for(int j = 0; j < 45; j++) {
@@ -412,7 +565,7 @@ int main()
         // 맵 초기화
         for(int i = 1; i < 23; i++)
             for(int j = 1; j < 44; j++) {
-                if(M.map[level][i][j] != 1 && M.map[level][i][j] != 7)
+                if(M.map[level][i][j] != 1)
                     M.map[level][i][j] = 0;
             }
 
@@ -423,6 +576,7 @@ int main()
         
         maxsize = maxsize <= snake.size() ? snake.size() : maxsize;
         // 보드 초기화
+        string score_level = "Level : " + to_string(level+1);
         string score_snakeSize = "B : " + to_string(maxsize);
         string score_growthPoint = "+ : " + to_string(GamePoint[0]);
         string score_poisonPoint= "- : " + to_string(GamePoint[1]);
@@ -449,8 +603,8 @@ int main()
         } else mission_gatePoint += " ( )";
 
         for (int i = 0; i < gatelist.size(); i++) {
-            M.map[level][gatelist[i].gate1[0].first][gatelist[i].gate1[0].second] = 7;
-            M.map[level][gatelist[i].gate2[0].first][gatelist[i].gate2[0].second] = 7;
+            M.map[level][gatelist[i].gate1[0][0]][gatelist[i].gate1[0][1]] = 7;
+            M.map[level][gatelist[i].gate2[0][0]][gatelist[i].gate2[0][1]] = 7;
         }
 
         M.map[level][snake[0][0]][snake[0][1]] = 3;
@@ -498,8 +652,8 @@ int main()
             it->dur++;
         for (vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end();) {
             if (it->dur == 10000000/speed) {
-                M.map[level][it->gate1[0].first][it->gate1[0].second] = 1;
-                M.map[level][it->gate2[0].first][it->gate2[0].second] = 1;
+                M.map[level][it->gate1[0][0]][it->gate1[0][1]] = 1;
+                M.map[level][it->gate2[0][0]][it->gate2[0][1]] = 1;
                 it = gatelist.erase(it);
             } else { ++it; }
         }
@@ -556,7 +710,7 @@ int main()
             }
         }
 
-        mvwprintw(score, 1, 5, to_string(level + 1).c_str());
+        mvwprintw(score, 1, 5, score_level.c_str());
         mvwprintw(score, 3, 5, score_snakeSize.c_str());
         mvwprintw(score, 4, 5, score_growthPoint.c_str());
         mvwprintw(score, 5, 5, score_poisonPoint.c_str());
@@ -585,23 +739,23 @@ int main()
             gameover = true;
             break;
         }
-       
+
         switch (cur_dir)
         {
         case KEY_UP:
-            last_dir = MoveUP(M.map, snake);
+            last_dir = MoveUP(M.map, snake, gatelist);
             break;
         case KEY_DOWN:
-            last_dir = MoveDOWN(M.map, snake);
+            last_dir = MoveDOWN(M.map, snake, gatelist);
             break;
         case KEY_LEFT:
-            last_dir = MoveLEFT(M.map, snake);
+            last_dir = MoveLEFT(M.map, snake, gatelist);
             break;
         case KEY_RIGHT:
-            last_dir = MoveRIGHT(M.map, snake);
+            last_dir = MoveRIGHT(M.map, snake, gatelist);
             break;
         default:
-            last_dir = MoveLAST(M.map, snake);
+            last_dir = MoveLAST(M.map, snake, gatelist);
             break;
         }
 
@@ -629,6 +783,7 @@ int main()
             level++;
         };
     }
+
     if(gameover == true) {
         GameOver(board);
         getch();
