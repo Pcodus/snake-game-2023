@@ -1,14 +1,13 @@
 #include <ncurses.h>
 #include <vector>
 #include "map.h"
-#include "item.h"
-#include "snakeMove.cpp" // Move 함수들 옮겨놓음
-#include <ctime> // 의사 난수 생성(게이트, 아이템)
+#include <ctime>
 #include <cstdlib>
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
 
+#define speed 500000
 #define W 100
 #define H 30
 using namespace std;
@@ -16,8 +15,184 @@ using namespace std;
 int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 bool gameover;
+
+class G {
+public:
+    int x;
+    int y;
+    int dur;
+    G(int x, int y) : x(x), y(y) { dur = 0; };
+};
+class P {
+public:
+    int x;
+    int y;
+    int dur;
+    P(int x, int y) : x(x), y(y) { dur = 0; };
+};
+
 vector<G> growitems;
 vector<P> poisonitems;
+
+int MoveUP(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][0]--;
+    // growth, poison, hit body
+    if(map[snake[0][0]][snake[0][1]] == 5) {
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[1][0]++;
+        // 이 좌표의 아이템 벡터를 찾아야댐
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                growitems.erase(it);
+                return KEY_UP;
+            }
+        }
+        // 그리고 그 아이템 벡터 삭제
+        
+    } 
+    else if(map[snake[0][0]][snake[0][1]] == 6) {
+        snake.pop_back();
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                poisonitems.erase(it);
+                return KEY_UP;
+            }
+        }
+    }
+    else if(map[snake[0][0]][snake[0][1]] == 4) {
+        return 9999;
+    }
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_UP;
+}
+
+int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][0]++;
+    if(map[snake[0][0]][snake[0][1]] == 5) {
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[1][0]--;
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                growitems.erase(it);
+                return KEY_DOWN;
+            }
+        }
+        
+    } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        snake.pop_back();
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                poisonitems.erase(it);
+                return KEY_DOWN;
+            }
+        }
+    } 
+    else if(map[snake[0][0]][snake[0][1]] == 4) {
+        return 9999;
+    }
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_DOWN;
+}
+
+int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][1]--;
+    if(map[snake[0][0]][snake[0][1]] == 5) {
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[1][1]++;
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                growitems.erase(it);
+                return KEY_LEFT;
+            }
+        }
+        
+    } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        snake.pop_back();
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                poisonitems.erase(it);
+                return KEY_LEFT;
+            }
+        }
+    } 
+    else if(map[snake[0][0]][snake[0][1]] == 4) {
+        return 9999;
+    }
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_LEFT;
+}
+
+int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][1]++;
+    if(map[snake[0][0]][snake[0][1]] == 5) {
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[1][1]--;
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                growitems.erase(it);
+                return KEY_RIGHT;
+            }
+        }
+    } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        snake.pop_back();
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                poisonitems.erase(it);
+                return KEY_RIGHT;
+            }
+        }
+    }
+    else if(map[snake[0][0]][snake[0][1]] == 4) {
+        return 9999;
+    }
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }   
+    return KEY_RIGHT;
+}
+
+int MoveLAST(int map[][45], vector<vector<int> >& snake) {
+    switch(snake[0][0] - snake[1][0]) {
+        case 1:
+            return MoveDOWN(map,snake);
+        case -1:
+            return MoveUP(map,snake);
+        case 0:
+            switch(snake[0][1] - snake[1][1]) {
+                case 1:
+                    return MoveRIGHT(map,snake);
+                case -1:
+                    return MoveLEFT(map,snake);
+            }
+    }
+    return 0;
+}
 
 void GenerateGrowth(int map[][45]) {
     int x = rand() % 23 + 1;
@@ -43,13 +218,6 @@ void GeneratePoison(int map[][45]) {
         map[x][y] = 6;
     }
 }
-
-// void deleteItem(int map[][45], int i) {
-//     int x = items[i].x;
-//     int y = items[i].y;
-//     map[x][y] = 0;
-//     items.erase(items.begin() + i);
-// }
 
 void GameOver(WINDOW* board) {
     gameover = true;
@@ -118,7 +286,7 @@ int main()
 
     gameover = false;
     time_t tmp = time(NULL);  // 현재 시간을 저장
-    time_t currenttime, deletetime;
+    time_t currenttime;
     int itemSig = 5;
     while (!gameover) {
         werase(board);
@@ -144,18 +312,29 @@ int main()
         currenttime = time(NULL);  // 현재 시간을 가져옴
         if (currenttime - tmp >= itemSig) { // 5초가 지나면
             GenerateGrowth(M.map);
+            GenerateGrowth(M.map);
+            GeneratePoison(M.map);
             GeneratePoison(M.map);
             tmp = currenttime;  // item 생성한 시간 업데이트
         }
 
-        // 아이템 5초 후 제거
-        deletetime = time(NULL);
-        if(deletetime - tmp >= itemSig) {
-            M.map[growitems[0].x][growitems[0].y] = 0;
-            M.map[poisonitems[0].x][poisonitems[0].y] = 0;
-            growitems.erase(growitems.begin());
-            poisonitems.erase(poisonitems.begin());
-            tmp = deletetime;
+        // 5초 지나면 아이템 제거
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++)
+            it->dur++;
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++)
+            it->dur++;
+
+        for (vector<G>::iterator it = growitems.begin(); it != growitems.end();) {
+            if (it->dur == 5000000/speed) {
+                M.map[it->x][it->y] = 0;
+                it = growitems.erase(it);
+            } else { ++it; }
+        }
+        for (vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end();) {
+            if (it->dur == 5000000/speed) {
+                M.map[it->x][it->y] = 0;
+                it = poisonitems.erase(it);
+            } else { ++it; }
         }
 
         // 맵 초기화 끝
@@ -209,7 +388,7 @@ int main()
         
         //시간 설정
         signum = true;
-        ualarm(500000, 0);
+        ualarm(speed, 0);
         
         while(signum){
             int input = getch();
@@ -242,14 +421,17 @@ int main()
             break;
         }
 
-
         // 패배 조건
         // 2. 벽에 부딪힘
         // 3. 길이 3 미만
+        // 4. 몸에 부딪힘
         if(snake.size() < 3) {
             gameover = true;
             break;    
         } else if(M.map[snake[0][0]][snake[0][1]] == 1) {
+            gameover = true;
+            break;
+        } else if(last_dir == 9999) {
             gameover = true;
             break;
         }
