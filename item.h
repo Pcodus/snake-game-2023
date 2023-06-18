@@ -1,10 +1,3 @@
-#include <ctime>
-#include <vector>
-#include <iostream>
-using namespace std;
-#ifndef ITEM
-#define ITEM
-
 class G {
 public:
     int x;

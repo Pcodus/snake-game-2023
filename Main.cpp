@@ -1,13 +1,14 @@
 #include <ncurses.h>
 #include <vector>
 #include "map.h"
+#include "gate.h"
 #include <ctime>
 #include <cstdlib>
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
 
-#define speed 200000
+#define speed 150000
 #define W 100
 #define H 30
 using namespace std;
@@ -35,6 +36,8 @@ public:
 vector<G> growitems;
 vector<P> poisonitems;
 int itempoint[2] = {0,0};
+vector<Gatepair> gatelist;
+
 
 int MoveUP(int map[][45], vector<vector<int> >& snake) {
     vector<int> tmp;
@@ -251,6 +254,24 @@ void GeneratePoison(int map[][45]) {
     }
 }
 
+void MakeGate(int map[][45]) {
+    int x1 = rand() % 23 + 1;
+    int y1 = rand() % 44 + 1;
+    while( !(map[x1][y1] == 1) ) {
+        x1 = rand() % 23 + 1;
+        y1 = rand() % 44 + 1;
+    }
+    int x2 = rand() % 23 + 1;
+    int y2 = rand() % 44 + 1;
+    while( !(map[x2][y2] == 1) ) {
+        x2 = rand() % 23 + 1;
+        y2 = rand() % 44 + 1;
+    }
+    Gatepair gate(x1, y1, x2, y2);
+    gatelist.push_back(gate);
+    map[x1][y1] = map[x2][y2] = 7;
+}
+
 void GameOver(WINDOW* board) {
     gameover = true;
     mvwprintw(board, 10, 10, "Game Over!");
@@ -290,6 +311,7 @@ int main()
     
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_BLACK, COLOR_WHITE);
+    init_pair(5, COLOR_CYAN, COLOR_CYAN);
     // ScoreBoard 생성
     WINDOW *score = subwin(stdscr, 10, 45, 3, 55); 
     box(score, 0, 0);
@@ -319,6 +341,7 @@ int main()
 
     gameover = false;
     time_t tmp = time(NULL);  // 현재 시간을 저장
+    time_t tmp2 = time(NULL);  // 현재 시간을 저장
     time_t currenttime;
     int itemSig = 5;
 
@@ -327,6 +350,8 @@ int main()
     int goal_poisonPoint=rand()%3 + 5;
     int goal_gatePoint=rand()%5 + 5;
 
+    int gateSig = 10;
+    
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
@@ -336,10 +361,6 @@ int main()
         for(int i = 1; i < 23; i++)
             for(int j = 1; j < 44; j++)
                 M.map[i][j] = 0;
-
-        M.map[snake[0][0]][snake[0][1]] = 3;
-        for(int i = 1; i < snake.size(); i++)
-            M.map[snake[i][0]][snake[i][1]] = 4;
 
         for (int i = 0; i < growitems.size(); i++)
             M.map[growitems[i].x][growitems[i].y] = 5;
@@ -359,6 +380,18 @@ int main()
         mission_growthPoint += goal_growthPoint <= itempoint[0] ? " (v)" : " ( )";
         mission_poisonPoint += goal_poisonPoint <= itempoint[1] ? " (v)" : " ( )";
         // mission_gatePoint += goal_gatePoint <=  ? " (v)" : " ( )";   
+
+        for (int i = 0; i < gatelist.size(); i++) {
+            M.map[gatelist[i].gate1[0].first][gatelist[i].gate1[0].second] = 7;
+            M.map[gatelist[i].gate2[0].first][gatelist[i].gate2[0].second] = 7;
+        }
+
+        M.map[snake[0][0]][snake[0][1]] = 3;
+        for(int i = 1; i < snake.size(); i++)
+            M.map[snake[i][0]][snake[i][1]] = 4;
+
+
+
 
         // 아이템 5초마다 생성
         currenttime = time(NULL);  // 현재 시간을 가져옴
@@ -388,6 +421,18 @@ int main()
                 it = poisonitems.erase(it);
             } else { ++it; }
         }
+
+        // Gate 10초마다 생성
+        // Gate는 map에 7로 표시
+        if (currenttime - tmp2 >= gateSig) { // 10초가 지나면
+            MakeGate(M.map);
+            tmp2 = currenttime;  // gate 생성한 시간 업데이트
+        }
+
+
+
+
+        // 맵 초기화 끝
 
         for(int i = 0; i < 24; i++) {
             for(int j = 0; j < 45; j++) {
@@ -428,12 +473,16 @@ int main()
                         mvwprintw(board, i, j, "P");
                         wattroff(board, COLOR_PAIR(4));
                         break;
+                    case 7:
+                        wattron(board, COLOR_PAIR(5));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(5));
+                        break;
                     default:
                         break;
                 }
             }
         }
-
 
         // mvwprintw(score, 1, 5,level.c_str());
         mvwprintw(score, 3, 5, score_snakeSize.c_str());
