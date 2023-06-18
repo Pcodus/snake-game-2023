@@ -1,110 +1,67 @@
 #include <ncurses.h>
 #include <vector>
 #include "map.h"
+#include "item.h"
+#include "snakeMove.cpp" // Move 함수들 옮겨놓음
+#include <ctime> // 의사 난수 생성(게이트, 아이템)
+#include <cstdlib>
+#include <signal.h>
+#include <unistd.h>
+#include <iostream>
 
 #define W 100
 #define H 30
 using namespace std;
 
-int last_dir;
+int last_dir = 5;
+int cur_dir = KEY_RIGHT;
 bool gameover;
-
-int MoveUP(int map[][45], vector<vector<int> >& snake) {
-    vector<int> tmp;
-    vector<int> head = snake[0];
-
-    snake[0][0]--;
-    snake[0][0] = snake[0][0] % 24;
-    for(int i = 1; i < snake.size(); i++) {
-        tmp = snake[i];
-        snake[i] = head;
-        head = tmp;
-    }
-    return KEY_UP;
-}
-
-int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
-    vector<int> tmp;
-    vector<int> head = snake[0];
-
-    snake[0][0]++;
-    snake[0][0] = snake[0][0] % 24;
-    for(int i = 1; i < snake.size(); i++) {
-        tmp = snake[i];
-        snake[i] = head;
-        head = tmp;
-    }
-    return KEY_DOWN;
-}
-
-int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
-    vector<int> tmp;
-    vector<int> head = snake[0];
-
-    snake[0][1]--;
-    snake[0][1] = snake[0][1] % 45;
-    for(int i = 1; i < snake.size(); i++) {
-        tmp = snake[i];
-        snake[i] = head;
-        head = tmp;
-    }
-    return KEY_LEFT;
-}
-
-int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
-    vector<int> tmp;
-    vector<int> head = snake[0];
-
-    snake[0][1]++;
-    snake[0][1] = snake[0][1] % 45;
-    for(int i = 1; i < snake.size(); i++) {
-        tmp = snake[i];
-        snake[i] = head;
-        head = tmp;
-    }   
-    return KEY_RIGHT;
-}
-
-int MoveLAST(int map[][45], vector<vector<int> >& snake) {
-    switch(snake[0][0] - snake[1][0]) {
-        case 1:
-            return MoveDOWN(map,snake);
-        case -1:
-            return MoveUP(map,snake);
-        case 0:
-            switch(snake[0][1] - snake[1][1]) {
-                case 1:
-                    return MoveRIGHT(map,snake);
-                case -1:
-                    return MoveLEFT(map,snake);
-            }
-    }
-    return 0;
-}
+vector<G> growitems;
+vector<P> poisonitems;
 
 void GenerateGrowth(int map[][45]) {
-    int x = rand() % 24;
-    int y = rand() % 45;
-    if(map[x][y] == 0) {
-        map[x][y] = 5;  // 5 는 GROWTH ITEM
-    } else { 
-        GenerateGrowth(map);
+    int x = rand() % 23 + 1;
+    int y = rand() % 44 + 1;
+    if (map[x][y] != 0) {
+        x = rand() % 23 + 1;
+        y = rand() % 44 + 1;
+    }
+    else {
+        G item(x, y);
+        growitems.push_back(item);
+        map[x][y] = 5;
     }
 }
 void GeneratePoison(int map[][45]) {
-    int x = rand() % 24;
-    int y = rand() % 45;
-    if (map[x][y] == 0) {
-        map[x][y] = 6;  // 6 은 POISON ITEM
-    } else {
-        GeneratePoison(map);
+    int x = rand() % 23 + 1;
+    int y = rand() % 44 + 1;
+    if (map[x][y] != 0) {
+        x = rand() % 23 + 1;
+        y = rand() % 44 + 1;
+    }
+    else {
+        P item(x, y);
+        poisonitems.push_back(item);
+        map[x][y] = 6;
     }
 }
+
+// void deleteItem(int map[][45], int i) {
+//     int x = items[i].x;
+//     int y = items[i].y;
+//     map[x][y] = 0;
+//     items.erase(items.begin() + i);
+// }
 
 void GameOver(WINDOW* board) {
     gameover = true;
     mvwprintw(board, 10, 10, "Game Over!");
     refresh();
+}
+
+bool signum = true;
+void sig_alarm(int sig) {
+    signum = false;
 }
 
 int main()
@@ -115,6 +72,7 @@ int main()
     cbreak();
     nodelay(stdscr, true);
     keypad(stdscr, true);
+    srand(time(NULL));
   
     // 전체 윈도우 생성
     WINDOW *back = subwin(stdscr, H, W, 0, 0);
@@ -158,15 +116,68 @@ int main()
     M.map[snake[1][0]][snake[1][1]] = 4;
     M.map[snake[2][0]][snake[2][1]] = 4;
     
-
+    signal(SIGALRM,sig_alarm);
 
     gameover = false;
+    time_t tmp = time(NULL);  // 현재 시간을 저장
+    time_t currenttime, deletetime;
+    int itemSig = 5;
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
 
-        GenerateGrowth(M.map);
-        GeneratePoison(M.map);
+        
+        // 맵 초기화(아이템, 게이트 반영 X)
+        for(int i = 1; i < 23; i++)
+            for(int j = 1; j < 44; j++)
+                M.map[i][j] = 0;
+
+        M.map[snake[0][0]][snake[0][1]] = 3;
+        for(int i = 1; i < snake.size(); i++)
+            M.map[snake[i][0]][snake[i][1]] = 4;
+
+        for (int i = 0; i < growitems.size(); i++)
+            M.map[growitems[i].x][growitems[i].y] = 5;
+        for (int i = 0; i < poisonitems.size(); i++)
+            M.map[poisonitems[i].x][poisonitems[i].y] = 6;
+        
+
+        // 아이템 5초마다 생성
+        currenttime = time(NULL);  // 현재 시간을 가져옴
+        if (currenttime - tmp >= itemSig) { // 5초가 지나면
+            GenerateGrowth(M.map);
+            GeneratePoison(M.map);
+            tmp = currenttime;  // item 생성한 시간 업데이트
+        }
+
+        // 아이템 5초 후 제거
+        deletetime = time(NULL);
+        if(deletetime - tmp >= itemSig) {
+            growitems.erase(growitems.begin());
+            poisonitems.erase(poisonitems.begin());
+            M.map[growitems[0].x][growitems[0].y] = 0;
+            M.map[poisonitems[0].x][poisonitems[0].y] = 0;
+            tmp = deletetime + 5;
+        }
+
+
+
+        // for (int i = 0; i < growitems.size(); i++)
+        //     growitems[i].dur++;
+        // for (int i = 0; i < poisonitems.size(); i++)
+        //     growitems[i].dur++;
+
+        // for (vector<G>::iterator it = growitems.begin(); it != growitems.end(); )
+        //     if(it->dur == itemSig)
+        //         it = growitems.erase(it);
+        //     else { it++; }
+        // for (vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); )
+        //     if(it->dur == itemSig)
+        //         it = poisonitems.erase(it);
+        //     else { it++; }
+
+
+        // 맵 초기화 끝
 
         for(int i = 0; i < 24; i++) {
             for(int j = 0; j < 45; j++) {
@@ -177,7 +188,7 @@ int main()
                         mvwprintw(board, i, j, " ");
                         wattroff(board, COLOR_PAIR(2));
                         break;
-                    case 1:  // WALL : 검정색
+                    case 1:
                         wattron(board, COLOR_PAIR(3));
                         mvwprintw(board, i, j, " ");
                         wattroff(board, COLOR_PAIR(3));
@@ -212,9 +223,27 @@ int main()
                 }
             }
         }
+
+        wrefresh(board);
         
-        int input = getch();
-        switch (input)
+        //시간 설정
+        signum = true;
+        ualarm(100000, 0);
+        
+        while(signum){
+            int input = getch();
+            if(input == KEY_UP || input == KEY_DOWN || input == KEY_LEFT || input == KEY_RIGHT)
+                cur_dir = input;
+        }
+        
+
+        // 패배조건 1. 반대방향 입력
+        if(((cur_dir%10) - (last_dir%10) == -1) || ((cur_dir%10) - (last_dir%10) == 1)){
+            gameover = true;
+            break;
+        }
+
+        switch (cur_dir)
         {
         case KEY_UP:
             last_dir = MoveUP(M.map, snake);
@@ -233,17 +262,24 @@ int main()
             break;
         }
 
-        
-        for(int i = 1; i < 23; i++)
-            for(int j = 1; j < 44; j++)
-                M.map[i][j] = 0;
+        // 패배 조건
+        // 2. 벽에 부딪힘
 
-        M.map[snake[0][0]][snake[0][1]] = 3;
-        
-        for(int i = 1; i < snake.size(); i++)
-            M.map[snake[i][0]][snake[i][1]] = 4;
-        
-        wrefresh(board);
+        // 3. 길이 3 미만
+        if(snake.size() < 3) {
+            mvwprintw(board, snake[0][0], snake[0][1], "F");
+            gameover = true;
+            break;    
+        } else if(M.map[snake[0][0]][snake[0][1]] == 1) {
+            gameover = true;
+            break;
+        }
+
+    }
+    if(gameover == true) {
+        // 실패
+    } else {
+        // 성공
     }
 
     getch(); // 사용자입력대기

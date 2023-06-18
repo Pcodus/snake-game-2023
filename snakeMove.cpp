@@ -1,8 +1,9 @@
 #include <iostream>
 #include <vector>
+#include <ncurses.h>
 using namespace std;
 
-void MoveUP(int map[][45], vector<vector<int>>& snake) {
+int MoveUP(int map[][45], vector<vector<int> >& snake) {
     vector<int> tmp;
     vector<int> head = snake[0];
 
@@ -12,9 +13,10 @@ void MoveUP(int map[][45], vector<vector<int>>& snake) {
         snake[i] = head;
         head = tmp;
     }
+    return KEY_UP;
 }
 
-void MoveDOWN(int map[][45], vector<vector<int>>& snake) {
+int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
     vector<int> tmp;
     vector<int> head = snake[0];
 
@@ -24,9 +26,10 @@ void MoveDOWN(int map[][45], vector<vector<int>>& snake) {
         snake[i] = head;
         head = tmp;
     }
+    return KEY_DOWN;
 }
 
-void MoveLEFT(int map[][45], vector<vector<int>>& snake) {
+int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
     vector<int> tmp;
     vector<int> head = snake[0];
 
@@ -36,9 +39,10 @@ void MoveLEFT(int map[][45], vector<vector<int>>& snake) {
         snake[i] = head;
         head = tmp;
     }
+    return KEY_LEFT;
 }
 
-void MoveRIGHT(int map[][45], vector<vector<int>>& snake) {
+int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
     vector<int> tmp;
     vector<int> head = snake[0];
 
@@ -48,4 +52,22 @@ void MoveRIGHT(int map[][45], vector<vector<int>>& snake) {
         snake[i] = head;
         head = tmp;
     }   
+    return KEY_RIGHT;
+}
+
+int MoveLAST(int map[][45], vector<vector<int> >& snake) {
+    switch(snake[0][0] - snake[1][0]) {
+        case 1:
+            return MoveDOWN(map,snake);
+        case -1:
+            return MoveUP(map,snake);
+        case 0:
+            switch(snake[0][1] - snake[1][1]) {
+                case 1:
+                    return MoveRIGHT(map,snake);
+                case -1:
+                    return MoveLEFT(map,snake);
+            }
+    }
+    return 0;
 }
