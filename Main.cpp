@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <vector>
 #include "map.h"
+#include "item.h"
 #include "snakeMove.cpp" // Move 함수들 옮겨놓음
 #include <ctime> // 의사 난수 생성(게이트, 아이템)
 #include <cstdlib>
@@ -15,20 +16,40 @@ using namespace std;
 int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 bool gameover;
+vector<G> growitems;
+vector<P> poisonitems;
 
 void GenerateGrowth(int map[][45]) {
     int x = rand() % 23 + 1;
     int y = rand() % 44 + 1;
-    if(map[x][y] == 0)
-        map[x][y] = 5;  // 5 는 GROWTH ITEM
+    if (map[x][y] != 0) {
+        GenerateGrowth(map);
+    }
+    else {
+        G item(x, y);
+        growitems.push_back(item);
+        map[x][y] = 5;
+    }
 }
-
 void GeneratePoison(int map[][45]) {
     int x = rand() % 23 + 1;
     int y = rand() % 44 + 1;
-    if (map[x][y] == 0)
-        map[x][y] = 6;  // 6 은 POISON ITEM
+    if (map[x][y] != 0) {
+       GeneratePoison(map);
+    }
+    else {
+        P item(x, y);
+        poisonitems.push_back(item);
+        map[x][y] = 6;
+    }
 }
+
+// void deleteItem(int map[][45], int i) {
+//     int x = items[i].x;
+//     int y = items[i].y;
+//     map[x][y] = 0;
+//     items.erase(items.begin() + i);
+// }
 
 void GameOver(WINDOW* board) {
     gameover = true;
@@ -37,7 +58,6 @@ void GameOver(WINDOW* board) {
 }
 
 bool signum = true;
-//
 void sig_alarm(int sig) {
     signum = false;
 }
@@ -97,23 +117,47 @@ int main()
     signal(SIGALRM,sig_alarm);
 
     gameover = false;
+    time_t tmp = time(NULL);  // 현재 시간을 저장
+    time_t currenttime, deletetime;
+    int itemSig = 5;
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
 
         
-        // 맵 초기화(아이템, 게이트 반영 X)
+        // 맵 초기화
         for(int i = 1; i < 23; i++)
             for(int j = 1; j < 44; j++)
                 M.map[i][j] = 0;
 
         M.map[snake[0][0]][snake[0][1]] = 3;
-        
         for(int i = 1; i < snake.size(); i++)
             M.map[snake[i][0]][snake[i][1]] = 4;
+
+        for (int i = 0; i < growitems.size(); i++)
+            M.map[growitems[i].x][growitems[i].y] = 5;
+        for (int i = 0; i < poisonitems.size(); i++)
+            M.map[poisonitems[i].x][poisonitems[i].y] = 6;
         
-        GenerateGrowth(M.map);
-        GeneratePoison(M.map);
+
+        // 아이템 5초마다 생성
+        currenttime = time(NULL);  // 현재 시간을 가져옴
+        if (currenttime - tmp >= itemSig) { // 5초가 지나면
+            GenerateGrowth(M.map);
+            GeneratePoison(M.map);
+            tmp = currenttime;  // item 생성한 시간 업데이트
+        }
+
+        // 아이템 5초 후 제거
+        deletetime = time(NULL);
+        if(deletetime - tmp >= itemSig) {
+            M.map[growitems[0].x][growitems[0].y] = 0;
+            M.map[poisonitems[0].x][poisonitems[0].y] = 0;
+            growitems.erase(growitems.begin());
+            poisonitems.erase(poisonitems.begin());
+            tmp = deletetime;
+        }
+
         // 맵 초기화 끝
 
         for(int i = 0; i < 24; i++) {
@@ -172,14 +216,13 @@ int main()
             if(input == KEY_UP || input == KEY_DOWN || input == KEY_LEFT || input == KEY_RIGHT)
                 cur_dir = input;
         }
-        
 
         // 패배조건 1. 반대방향 입력
         if(((cur_dir%10) - (last_dir%10) == -1) || ((cur_dir%10) - (last_dir%10) == 1)){
             gameover = true;
             break;
         }
-
+       
         switch (cur_dir)
         {
         case KEY_UP:
@@ -199,11 +242,11 @@ int main()
             break;
         }
 
+
         // 패배 조건
         // 2. 벽에 부딪힘
         // 3. 길이 3 미만
         if(snake.size() < 3) {
-            mvwprintw(board, snake[0][0], snake[0][1], "F");
             gameover = true;
             break;    
         } else if(M.map[snake[0][0]][snake[0][1]] == 1) {

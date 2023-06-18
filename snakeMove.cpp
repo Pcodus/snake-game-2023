@@ -8,6 +8,11 @@ int MoveUP(int map[][45], vector<vector<int> >& snake) {
     vector<int> head = snake[0];
 
     snake[0][0]--;
+    if(map[snake[0][0]][snake[0][1]] == 5){
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[0][0]++;
+        return KEY_UP;
+    }
     for(int i = 1; i < snake.size(); i++) {
         tmp = snake[i];
         snake[i] = head;
@@ -21,6 +26,11 @@ int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
     vector<int> head = snake[0];
 
     snake[0][0]++;
+    if(map[snake[0][0]][snake[0][1]] == 5){
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[0][0]--;
+        return KEY_DOWN;
+    }
     for(int i = 1; i < snake.size(); i++) {
         tmp = snake[i];
         snake[i] = head;
@@ -34,6 +44,11 @@ int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
     vector<int> head = snake[0];
 
     snake[0][1]--;
+    if(map[snake[0][0]][snake[0][1]] == 5){
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[0][1]++;
+        return KEY_LEFT;
+    }
     for(int i = 1; i < snake.size(); i++) {
         tmp = snake[i];
         snake[i] = head;
@@ -47,6 +62,11 @@ int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
     vector<int> head = snake[0];
 
     snake[0][1]++;
+    if(map[snake[0][0]][snake[0][1]] == 5){
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[0][1]--;
+        return KEY_RIGHT;
+    }
     for(int i = 1; i < snake.size(); i++) {
         tmp = snake[i];
         snake[i] = head;
