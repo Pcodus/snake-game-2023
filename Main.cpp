@@ -16,7 +16,8 @@ using namespace std;
 int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 bool gameover;
-int temp = 0;
+int maxsize = 3;
+int level = 1;
 
 class G {
 public:
@@ -283,6 +284,18 @@ void sig_alarm(int sig) {
     signum = false;
 }
 
+void MapLevel(int map[][45], int level) {
+    int i = 0, x,y;
+    while(i < ((level-1) * 10)) {
+        do {
+            x = rand() % 22 + 2;
+            y = rand() % 43 + 2;
+        } while(map[x][y] == 4 || map[x][y] == 3 || map[x][y] == 1);
+        map[x][y] = 1;
+        i++;
+    }
+}
+
 int main()
 {
     initscr(); // Curses 모드시작
@@ -351,24 +364,78 @@ int main()
     int goal_gatePoint=rand()%5 + 5;
 
     int gateSig = 10;
-    
+    level = 3;
+    MapLevel(M.map,level);
+
+    for(int i = 0; i < 24; i++) {
+            for(int j = 0; j < 45; j++) {
+                switch (M.map[i][j])
+                {
+                    case 0:
+                        wattron(board, COLOR_PAIR(2));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(2));
+                        break;
+                    case 1:
+                        wattron(board, COLOR_PAIR(3));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(3));
+                        break;
+                    case 2:
+                        wattron(board, COLOR_PAIR(3));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(3));
+                        break;
+                    case 3:
+                        wattron(board, COLOR_PAIR(4));
+                        mvwprintw(board, i, j, "H");
+                        wattroff(board, COLOR_PAIR(4));
+                        break;
+                    case 4:
+                        wattron(board, COLOR_PAIR(4));
+                        mvwprintw(board, i, j, "O");
+                        wattroff(board, COLOR_PAIR(4));
+                        break;
+                    case 5:
+                        wattron(board, COLOR_PAIR(4));
+                        mvwprintw(board, i, j, "G");
+                        wattroff(board, COLOR_PAIR(4));
+                        break;
+                    case 6:
+                        wattron(board, COLOR_PAIR(4));
+                        mvwprintw(board, i, j, "P");
+                        wattroff(board, COLOR_PAIR(4));
+                        break;
+                    case 7:
+                        wattron(board, COLOR_PAIR(5));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(5));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
-        temp++;
         
         // 맵 초기화
         for(int i = 1; i < 23; i++)
-            for(int j = 1; j < 44; j++)
-                M.map[i][j] = 0;
+            for(int j = 1; j < 44; j++) {
+                if(M.map[i][j] != 1 && M.map[i][j] != 7)
+                    M.map[i][j] = 0;
+            }
 
         for (int i = 0; i < growitems.size(); i++)
             M.map[growitems[i].x][growitems[i].y] = 5;
         for (int i = 0; i < poisonitems.size(); i++)
             M.map[poisonitems[i].x][poisonitems[i].y] = 6;
         
+        maxsize = maxsize <= snake.size() ? snake.size() : maxsize;
         // 보드 초기화
-        string score_snakeSize = "B : " + to_string(snake.size());
+        string score_snakeSize = "B : " + to_string(maxsize);
         string score_growthPoint = "+ : " + to_string(itempoint[0]);
         string score_poisonPoint= "- : " + to_string(itempoint[1]);
         // string score_gateCount = "G : " + to_string(usedGateCount);
@@ -376,7 +443,7 @@ int main()
         string mission_growthPoint = "+ : " + to_string(goal_growthPoint);
         string mission_poisonPoint= "- : " + to_string(goal_poisonPoint);
         string mission_gatePoint = "G : " + to_string(goal_gatePoint);
-        mission_snakeSize += goal_snakeSize <= snake.size() ? " (v)" : " ( )";
+        mission_snakeSize += goal_snakeSize <= maxsize ? " (v)" : " ( )";
         mission_growthPoint += goal_growthPoint <= itempoint[0] ? " (v)" : " ( )";
         mission_poisonPoint += goal_poisonPoint <= itempoint[1] ? " (v)" : " ( )";
         // mission_gatePoint += goal_gatePoint <=  ? " (v)" : " ( )";   
@@ -389,9 +456,6 @@ int main()
         M.map[snake[0][0]][snake[0][1]] = 3;
         for(int i = 1; i < snake.size(); i++)
             M.map[snake[i][0]][snake[i][1]] = 4;
-
-
-
 
         // 아이템 5초마다 생성
         currenttime = time(NULL);  // 현재 시간을 가져옴
@@ -439,8 +503,6 @@ int main()
                 it = gatelist.erase(it);
             } else { ++it; }
         }
-
-
 
         // 맵 초기화 끝
 
