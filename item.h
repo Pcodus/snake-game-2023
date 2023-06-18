@@ -1,5 +1,3 @@
-#include <ctime>
-
 class G {
 public:
     int x;

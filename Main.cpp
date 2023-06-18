@@ -44,6 +44,17 @@ void GeneratePoison(int map[][45]) {
     }
 }
 
+void MakeGate(int map[][45]) {
+    int x = rand() % 23 + 1;
+    int y = rand() % 44 + 1;
+    if ( !(map[x][y] == 1) ) {
+        GeneratePoison(map);
+    }
+    else {
+        map[x][y] = 7;
+    }
+}
+
 void GameOver(WINDOW* board) {
     gameover = true;
     mvwprintw(board, 10, 10, "Game Over!");
@@ -113,6 +124,7 @@ int main()
     time_t tmp = time(NULL);  // 현재 시간을 저장
     time_t currenttime;
     int itemSig = 5;
+    int gateSig = 10;
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
@@ -137,6 +149,8 @@ int main()
         currenttime = time(NULL);  // 현재 시간을 가져옴
         if (currenttime - tmp >= itemSig) { // 5초가 지나면
             GenerateGrowth(M.map);
+            GenerateGrowth(M.map);
+            GeneratePoison(M.map);
             GeneratePoison(M.map);
             tmp = currenttime;  // item 생성한 시간 업데이트
         }
@@ -159,6 +173,15 @@ int main()
                 it = poisonitems.erase(it);
             } else { ++it; }
         }
+
+        // Gate 10초마다 생성
+        // Gate는 map에 7로 표시
+        if (currenttime - tmp >= gateSig) { // 10초가 지나면
+            MakeGate(M.map);
+            tmp = currenttime;  // gate 생성한 시간 업데이트
+        }
+
+
 
 
         // 맵 초기화 끝
@@ -248,7 +271,6 @@ int main()
 
         // 패배 조건
         // 2. 벽에 부딪힘
-
         // 3. 길이 3 미만
         if(snake.size() < 3) {
             mvwprintw(board, snake[0][0], snake[0][1], "F");
