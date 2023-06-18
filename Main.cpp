@@ -15,6 +15,7 @@ using namespace std;
 int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 bool gameover;
+int temp = 0;
 
 class G {
 public:
@@ -33,6 +34,7 @@ public:
 
 vector<G> growitems;
 vector<P> poisonitems;
+int itempoint[2] = {0,0};
 
 int MoveUP(int map[][45], vector<vector<int> >& snake) {
     vector<int> tmp;
@@ -41,6 +43,7 @@ int MoveUP(int map[][45], vector<vector<int> >& snake) {
     snake[0][0]--;
     // growth, poison, hit body
     if(map[snake[0][0]][snake[0][1]] == 5) {
+        itempoint[0]++;
         snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
         snake[1][0]++;
         for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
@@ -51,6 +54,7 @@ int MoveUP(int map[][45], vector<vector<int> >& snake) {
         }
     }
     else if(map[snake[0][0]][snake[0][1]] == 6) {
+        itempoint[1]++;
         snake.pop_back();
         for(int i = 1; i < snake.size(); i++) {
             tmp = snake[i];
@@ -81,6 +85,7 @@ int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
 
     snake[0][0]++;
     if(map[snake[0][0]][snake[0][1]] == 5) {
+        itempoint[0]++;
         snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
         snake[1][0]--;
         for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
@@ -96,6 +101,7 @@ int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
         }
         
     } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        itempoint[1]++;
         snake.pop_back();
         for(int i = 1; i < snake.size(); i++) {
             tmp = snake[i];
@@ -126,6 +132,7 @@ int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
 
     snake[0][1]--;
     if(map[snake[0][0]][snake[0][1]] == 5) {
+        itempoint[0]++;
         snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
         snake[1][1]++;
         for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
@@ -136,6 +143,7 @@ int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
         }
         
     } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        itempoint[1]++;
         snake.pop_back();
         for(int i = 1; i < snake.size(); i++) {
             tmp = snake[i];
@@ -166,6 +174,7 @@ int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
 
     snake[0][1]++;
     if(map[snake[0][0]][snake[0][1]] == 5) {
+        itempoint[0]++;
         snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
         snake[1][1]--;
         for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
@@ -175,6 +184,7 @@ int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
             }
         }
     } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        itempoint[1]++;
         snake.pop_back();
         for(int i = 1; i < snake.size(); i++) {
             tmp = snake[i];
@@ -272,7 +282,7 @@ int main()
   
     // SnakeBoard 생성
     init_pair(2, COLOR_WHITE, COLOR_WHITE);
-    WINDOW *board = subwin(stdscr, 24, 45, 3, 5 ); 
+    WINDOW *board = subwin(stdscr, 24, 45, 3, 5); 
     box(board, 0, 0);
     attron(COLOR_PAIR(2));
     wbkgd(board, COLOR_PAIR(2));
@@ -285,13 +295,14 @@ int main()
     box(score, 0, 0);
     attron(COLOR_PAIR(3));
     wbkgd(score, COLOR_PAIR(3));
+    mvwprintw(score, 0, 14, "Score Board");
   
     // MissionBoard 생성
     WINDOW *mission = subwin(stdscr, 12, 45, 15, 55); 
     box(mission, 0, 0);
     attron(COLOR_PAIR(3));
     wbkgd(mission, COLOR_PAIR(3));
-
+    mvwprintw(mission, 0, 14, "Mission Board");
 
     MAP M;
     // make snake Body 
@@ -310,10 +321,16 @@ int main()
     time_t tmp = time(NULL);  // 현재 시간을 저장
     time_t currenttime;
     int itemSig = 5;
+
+    int goal_snakeSize=rand()%5 + 5;
+    int goal_growthPoint=rand()%5 + 5;
+    int goal_poisonPoint=rand()%3 + 5;
+    int goal_gatePoint=rand()%5 + 5;
+
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
-
+        temp++;
         
         // 맵 초기화
         for(int i = 1; i < 23; i++)
@@ -329,6 +346,19 @@ int main()
         for (int i = 0; i < poisonitems.size(); i++)
             M.map[poisonitems[i].x][poisonitems[i].y] = 6;
         
+        // 보드 초기화
+        string score_snakeSize = "B : " + to_string(snake.size());
+        string score_growthPoint = "+ : " + to_string(itempoint[0]);
+        string score_poisonPoint= "- : " + to_string(itempoint[1]);
+        // string score_gateCount = "G : " + to_string(usedGateCount);
+        string mission_snakeSize = "B : " + to_string(goal_snakeSize);
+        string mission_growthPoint = "+ : " + to_string(goal_growthPoint);
+        string mission_poisonPoint= "- : " + to_string(goal_poisonPoint);
+        string mission_gatePoint = "G : " + to_string(goal_gatePoint);
+        mission_snakeSize += goal_snakeSize <= snake.size() ? " (v)" : " ( )";
+        mission_growthPoint += goal_growthPoint <= itempoint[0] ? " (v)" : " ( )";
+        mission_poisonPoint += goal_poisonPoint <= itempoint[1] ? " (v)" : " ( )";
+        // mission_gatePoint += goal_gatePoint <=  ? " (v)" : " ( )";   
 
         // 아이템 5초마다 생성
         currenttime = time(NULL);  // 현재 시간을 가져옴
@@ -358,8 +388,6 @@ int main()
                 it = poisonitems.erase(it);
             } else { ++it; }
         }
-
-        // 맵 초기화 끝
 
         for(int i = 0; i < 24; i++) {
             for(int j = 0; j < 45; j++) {
@@ -406,8 +434,21 @@ int main()
             }
         }
 
+
+        // mvwprintw(score, 1, 5,level.c_str());
+        mvwprintw(score, 3, 5, score_snakeSize.c_str());
+        mvwprintw(score, 4, 5, score_growthPoint.c_str());
+        mvwprintw(score, 5, 5, score_poisonPoint.c_str());
+        // mvwprintw(score, 6, 5, score_gatePoint.c_str());
+
+        mvwprintw(mission, 3, 5, mission_snakeSize.c_str());
+        mvwprintw(mission, 4, 5, mission_growthPoint.c_str());
+        mvwprintw(mission, 5, 5, mission_poisonPoint.c_str());
+        // mvwprintw(mission, 6, 5, mission_gatePoint.c_str());
+
         wrefresh(board);
-        
+        wrefresh(mission);
+        wrefresh(score);
         //시간 설정
         signum = true;
         ualarm(speed, 0);
@@ -457,7 +498,6 @@ int main()
             gameover = true;
             break;
         }
-
     }
     if(gameover == true) {
         GameOver(board);
