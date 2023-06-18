@@ -8,11 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 
-<<<<<<< HEAD
-#define speed 150000
-=======
 #define speed 200000
->>>>>>> ab606b6f60b3b57aa5dd40eff6f1f75c8fd8809d
 #define W 100
 #define H 30
 using namespace std;
@@ -401,6 +397,16 @@ int main()
             tmp2 = currenttime;  // gate 생성한 시간 업데이트
         }
 
+        // 10초 지나면 Gate 제거
+        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++)
+            it->dur++;
+        for (vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end();) {
+            if (it->dur == 10000000/speed) {
+                M.map[it->gate1[0].first][it->gate1[0].second] = 1;
+                M.map[it->gate2[0].first][it->gate2[0].second] = 1;
+                it = gatelist.erase(it);
+            } else { ++it; }
+        }
 
 
 
