@@ -39,6 +39,10 @@ int itempoint[2] = {0,0};
 vector<Gatepair> gatelist;
 
 
+void ThroughGate(int map[][45], int dir) {
+
+}
+
 int MoveUP(int map[][45], vector<vector<int> >& snake) {
     vector<int> tmp;
     vector<int> head = snake[0];
@@ -74,7 +78,20 @@ int MoveUP(int map[][45], vector<vector<int> >& snake) {
     else if(map[snake[0][0]][snake[0][1]] == 4) {
         return 9999;
     }
-    for(int i = 1; i < snake.size(); i++) {
+    else if(map[snake[0][0]][snake[0][1]] == 7 && snake[0][0] == 0) {   // 왼쪽 벽의 gate
+        ThroughGate(map, KEY_LEFT);
+    }
+    else if(map[snake[0][0]][snake[0][1]] == 7 && snake[0][0] == 44) {   // 오른쪽 벽의 gate
+        ThroughGate(map, KEY_RIGHT);
+    }
+    else if(map[snake[0][0]][snake[0][1]] == 7 && snake[0][1] == 0) {   // 위쪽 벽의 gate
+        ThroughGate(map, KEY_UP);
+    }
+    else if(map[snake[0][0]][snake[0][1]] == 7 && snake[0][1] == 23) {   // 아래쪽 벽의 gate
+        ThroughGate(map, KEY_DOWN);
+    }
+
+     for(int i = 1; i < snake.size(); i++) {
         tmp = snake[i];
         snake[i] = head;
         head = tmp;
