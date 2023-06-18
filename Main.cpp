@@ -165,7 +165,7 @@ int main()
         
         //시간 설정
         signum = true;
-        ualarm(100000, 0);
+        ualarm(500000, 0);
         
         while(signum){
             int input = getch();
@@ -213,7 +213,7 @@ int main()
 
     }
     if(gameover == true) {
-        // 실패
+        GameOver(board);
     } else {
         // 성공
     }
