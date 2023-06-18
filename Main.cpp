@@ -1,14 +1,14 @@
 #include <ncurses.h>
 #include <vector>
 #include "map.h"
-#include "item.h"
-#include "snakeMove.cpp" // Move 함수들 옮겨놓음
-#include <ctime> // 의사 난수 생성(게이트, 아이템)
+#include "gate.h"
+#include <ctime>
 #include <cstdlib>
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
 
+#define speed 150000
 #define W 100
 #define H 30
 using namespace std;
@@ -16,8 +16,186 @@ using namespace std;
 int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 bool gameover;
+
+class G {
+public:
+    int x;
+    int y;
+    int dur;
+    G(int x, int y) : x(x), y(y) { dur = 0; };
+};
+class P {
+public:
+    int x;
+    int y;
+    int dur;
+    P(int x, int y) : x(x), y(y) { dur = 0; };
+};
+
 vector<G> growitems;
 vector<P> poisonitems;
+vector<Gatepair> gatelist;
+
+
+int MoveUP(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][0]--;
+    // growth, poison, hit body
+    if(map[snake[0][0]][snake[0][1]] == 5) {
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[1][0]++;
+        // 이 좌표의 아이템 벡터를 찾아야댐
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                growitems.erase(it);
+                return KEY_UP;
+            }
+        }
+        // 그리고 그 아이템 벡터 삭제
+        
+    } 
+    else if(map[snake[0][0]][snake[0][1]] == 6) {
+        snake.pop_back();
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                poisonitems.erase(it);
+                return KEY_UP;
+            }
+        }
+    }
+    else if(map[snake[0][0]][snake[0][1]] == 4) {
+        return 9999;
+    }
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_UP;
+}
+
+int MoveDOWN(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][0]++;
+    if(map[snake[0][0]][snake[0][1]] == 5) {
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[1][0]--;
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                growitems.erase(it);
+                return KEY_DOWN;
+            }
+        }
+        
+    } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        snake.pop_back();
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                poisonitems.erase(it);
+                return KEY_DOWN;
+            }
+        }
+    } 
+    else if(map[snake[0][0]][snake[0][1]] == 4) {
+        return 9999;
+    }
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_DOWN;
+}
+
+int MoveLEFT(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][1]--;
+    if(map[snake[0][0]][snake[0][1]] == 5) {
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[1][1]++;
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                growitems.erase(it);
+                return KEY_LEFT;
+            }
+        }
+        
+    } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        snake.pop_back();
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                poisonitems.erase(it);
+                return KEY_LEFT;
+            }
+        }
+    } 
+    else if(map[snake[0][0]][snake[0][1]] == 4) {
+        return 9999;
+    }
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }
+    return KEY_LEFT;
+}
+
+int MoveRIGHT(int map[][45], vector<vector<int> >& snake) {
+    vector<int> tmp;
+    vector<int> head = snake[0];
+
+    snake[0][1]++;
+    if(map[snake[0][0]][snake[0][1]] == 5) {
+        snake.insert(snake.begin(), {snake[0][0],snake[0][1]});
+        snake[1][1]--;
+        for(vector<G>::iterator it = growitems.begin(); it != growitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                growitems.erase(it);
+                return KEY_RIGHT;
+            }
+        }
+    } else if(map[snake[0][0]][snake[0][1]] == 6) {
+        snake.pop_back();
+        for(vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end(); it++) {
+            if(it->x == snake[0][0] && it->y == snake[0][1]){
+                poisonitems.erase(it);
+                return KEY_RIGHT;
+            }
+        }
+    }
+    else if(map[snake[0][0]][snake[0][1]] == 4) {
+        return 9999;
+    }
+    for(int i = 1; i < snake.size(); i++) {
+        tmp = snake[i];
+        snake[i] = head;
+        head = tmp;
+    }   
+    return KEY_RIGHT;
+}
+
+int MoveLAST(int map[][45], vector<vector<int> >& snake) {
+    switch(snake[0][0] - snake[1][0]) {
+        case 1:
+            return MoveDOWN(map,snake);
+        case -1:
+            return MoveUP(map,snake);
+        case 0:
+            switch(snake[0][1] - snake[1][1]) {
+                case 1:
+                    return MoveRIGHT(map,snake);
+                case -1:
+                    return MoveLEFT(map,snake);
+            }
+    }
+    return 0;
+}
 
 void GenerateGrowth(int map[][45]) {
     int x = rand() % 23 + 1;
@@ -35,7 +213,7 @@ void GeneratePoison(int map[][45]) {
     int x = rand() % 23 + 1;
     int y = rand() % 44 + 1;
     if (map[x][y] != 0) {
-        GeneratePoison(map);
+       GeneratePoison(map);
     }
     else {
         P item(x, y);
@@ -45,14 +223,21 @@ void GeneratePoison(int map[][45]) {
 }
 
 void MakeGate(int map[][45]) {
-    int x = rand() % 23 + 1;
-    int y = rand() % 44 + 1;
-    if ( !(map[x][y] == 1) ) {
-        GeneratePoison(map);
+    int x1 = rand() % 23 + 1;
+    int y1 = rand() % 44 + 1;
+    while( !(map[x1][y1] == 1) ) {
+        x1 = rand() % 23 + 1;
+        y1 = rand() % 44 + 1;
     }
-    else {
-        map[x][y] = 7;
+    int x2 = rand() % 23 + 1;
+    int y2 = rand() % 44 + 1;
+    while( !(map[x2][y2] == 1) ) {
+        x2 = rand() % 23 + 1;
+        y2 = rand() % 44 + 1;
     }
+    Gatepair gate(x1, y1, x2, y2);
+    gatelist.push_back(gate);
+    map[x1][y1] = map[x2][y2] = 7;
 }
 
 void GameOver(WINDOW* board) {
@@ -94,6 +279,7 @@ int main()
     
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_BLACK, COLOR_WHITE);
+    init_pair(5, COLOR_CYAN, COLOR_CYAN);
     // ScoreBoard 생성
     WINDOW *score = subwin(stdscr, 10, 45, 3, 55); 
     box(score, 0, 0);
@@ -122,6 +308,7 @@ int main()
 
     gameover = false;
     time_t tmp = time(NULL);  // 현재 시간을 저장
+    time_t tmp2 = time(NULL);  // 현재 시간을 저장
     time_t currenttime;
     int itemSig = 5;
     int gateSig = 10;
@@ -130,20 +317,27 @@ int main()
         box(board, 0, 0);
 
         
-        // 맵 초기화(아이템, 게이트 반영 X)
+        // 맵 초기화
         for(int i = 1; i < 23; i++)
             for(int j = 1; j < 44; j++)
                 M.map[i][j] = 0;
-
-        M.map[snake[0][0]][snake[0][1]] = 3;
-        for(int i = 1; i < snake.size(); i++)
-            M.map[snake[i][0]][snake[i][1]] = 4;
 
         for (int i = 0; i < growitems.size(); i++)
             M.map[growitems[i].x][growitems[i].y] = 5;
         for (int i = 0; i < poisonitems.size(); i++)
             M.map[poisonitems[i].x][poisonitems[i].y] = 6;
-        
+
+        for (int i = 0; i < gatelist.size(); i++) {
+            M.map[gatelist[i].gate1[0].first][gatelist[i].gate1[0].second] = 7;
+            M.map[gatelist[i].gate2[0].first][gatelist[i].gate2[0].second] = 7;
+        }
+
+        M.map[snake[0][0]][snake[0][1]] = 3;
+        for(int i = 1; i < snake.size(); i++)
+            M.map[snake[i][0]][snake[i][1]] = 4;
+
+
+
 
         // 아이템 5초마다 생성
         currenttime = time(NULL);  // 현재 시간을 가져옴
@@ -162,13 +356,13 @@ int main()
             it->dur++;
 
         for (vector<G>::iterator it = growitems.begin(); it != growitems.end();) {
-            if (it->dur == 50) {
+            if (it->dur == 5000000/speed) {
                 M.map[it->x][it->y] = 0;
                 it = growitems.erase(it);
             } else { ++it; }
         }
         for (vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end();) {
-            if (it->dur == 50) {
+            if (it->dur == 5000000/speed) {
                 M.map[it->x][it->y] = 0;
                 it = poisonitems.erase(it);
             } else { ++it; }
@@ -176,9 +370,9 @@ int main()
 
         // Gate 10초마다 생성
         // Gate는 map에 7로 표시
-        if (currenttime - tmp >= gateSig) { // 10초가 지나면
+        if (currenttime - tmp2 >= gateSig) { // 10초가 지나면
             MakeGate(M.map);
-            tmp = currenttime;  // gate 생성한 시간 업데이트
+            tmp2 = currenttime;  // gate 생성한 시간 업데이트
         }
 
 
@@ -225,6 +419,11 @@ int main()
                         mvwprintw(board, i, j, "P");
                         wattroff(board, COLOR_PAIR(4));
                         break;
+                    case 7:
+                        wattron(board, COLOR_PAIR(5));
+                        mvwprintw(board, i, j, " ");
+                        wattroff(board, COLOR_PAIR(5));
+                        break;
                     default:
                         break;
                 }
@@ -235,21 +434,20 @@ int main()
         
         //시간 설정
         signum = true;
-        ualarm(100000, 0);  // 0.1초 마다 시그널 생성
+        ualarm(speed, 0);
         
         while(signum){
             int input = getch();
             if(input == KEY_UP || input == KEY_DOWN || input == KEY_LEFT || input == KEY_RIGHT)
                 cur_dir = input;
         }
-        
 
         // 패배조건 1. 반대방향 입력
         if(((cur_dir%10) - (last_dir%10) == -1) || ((cur_dir%10) - (last_dir%10) == 1)){
             gameover = true;
             break;
         }
-
+       
         switch (cur_dir)
         {
         case KEY_UP:
@@ -272,11 +470,14 @@ int main()
         // 패배 조건
         // 2. 벽에 부딪힘
         // 3. 길이 3 미만
+        // 4. 몸에 부딪힘
         if(snake.size() < 3) {
-            mvwprintw(board, snake[0][0], snake[0][1], "F");
             gameover = true;
             break;    
         } else if(M.map[snake[0][0]][snake[0][1]] == 1) {
+            gameover = true;
+            break;
+        } else if(last_dir == 9999) {
             gameover = true;
             break;
         }
