@@ -117,7 +117,6 @@ int main()
     int goal_poisonPoint=rand()%3 + 3;
     int goal_gatePoint=rand()%3 + 1;
 
-
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
@@ -230,7 +229,7 @@ int main()
             } else { ++it; }
         }
 
-        // 맵 초기화 끝
+        // 초기화 끝
 
         for(int i = 0; i < 24; i++) {
             for(int j = 0; j < 45; j++) {
@@ -296,6 +295,7 @@ int main()
         wrefresh(board);
         wrefresh(mission);
         wrefresh(score);
+        refresh();
         //시간 설정
         signum = true;
         ualarm(speed, 0);
@@ -309,7 +309,6 @@ int main()
         // 패배조건 1. 반대방향 입력
         if(((cur_dir%10) - (last_dir%10) == -1) || ((cur_dir%10) - (last_dir%10) == 1)){
             gameover = true;
-            break;
         }
 
         switch (cur_dir)
@@ -349,13 +348,10 @@ int main()
         // 4. 몸에 부딪힘
         if(snake.size() < 3) {
             gameover = true;
-            break;    
         } else if(M.map[level][snake[0][0]][snake[0][1]] == 1) {
             gameover = true;
-            break;
         } else if(last_dir == 9999) {
             gameover = true;
-            break;
         }
 
         // 승리 조건
@@ -386,22 +382,19 @@ int main()
                 currenttime = time(NULL);
             }
             gateSig = 10; itemSig = 5;
-        };
+        }
     }
 
-    if(gameover == true) {
-        refresh();
-        WINDOW *gameover_win = newwin(24, 45, 3, 5);
-        wbkgd(gameover_win,COLOR_PAIR(1));
-        attron(COLOR_PAIR(6));
-        mvwprintw(gameover_win, 12, 23, "GAME OVER");
-        attroff(COLOR_PAIR(6));
-        wrefresh(gameover_win);
-        refresh();
-        getch();
-    }
 
-    getch(); // 사용자입력대기
+    WINDOW *gameover_win = newwin(24, 45, 3, 5);
+    wbkgd(gameover_win, COLOR_PAIR(6));
+    attron(COLOR_PAIR(6));
+    mvwprintw(gameover_win, 12, 18, "GAME OVER");
+    attroff(COLOR_PAIR(6));
+    wrefresh(gameover_win);
+    refresh();
+
+    wgetch(gameover_win);
     endwin(); // Curses 모드종료
   
     return 0;
