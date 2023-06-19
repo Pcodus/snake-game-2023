@@ -17,7 +17,7 @@ int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 bool gameover;
 int maxsize = 3;
-int level = 3;
+int level = 0;
 bool victory[4] = {false,false,false,false};
 bool signum = true;
 int GamePoint[3] = {0,0,0};
