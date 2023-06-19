@@ -324,7 +324,7 @@ void GeneratePoison(int map[][24][45]) {
     if (map[level][x][y] != 0) {
        GeneratePoison(map);
     }
-    else {
+    else {  
         P item(x, y);
         poisonitems.push_back(item);
         map[level][x][y] = 6;
@@ -453,9 +453,16 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
     return newdir;
 }
 
-void GameOver(WINDOW* board) {
-    mvwprintw(board, 10, 10, "Game Over!");
-    refresh();
+void GameOver() {
+    // GameOverBoard 생성
+    WINDOW *gameover = subwin(stdscr, 24, 45, 3, 5); 
+    box(gameover, 0, 0);
+    attron(COLOR_PAIR(6));
+    mvwprintw(gameover, 12, 23, "GAME OVER");
+    attroff(COLOR_PAIR(6));
+    wrefresh(gameover);
+    getch();
+    delwin(gameover);
 }
 
 void sig_alarm(int sig) {
@@ -491,20 +498,22 @@ int main()
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_BLACK, COLOR_WHITE);
     init_pair(5, COLOR_CYAN, COLOR_CYAN);
+    init_pair(6, COLOR_RED, COLOR_BLACK);
 
     // ScoreBoard 생성
     WINDOW *score = subwin(stdscr, 10, 45, 3, 55); 
     box(score, 0, 0);
     attron(COLOR_PAIR(3));
     wbkgd(score, COLOR_PAIR(3));
-    mvwprintw(score, 0, 14, "Score Board");
+    mvwprintw(score, 0, 16, "Score Board");
   
     // MissionBoard 생성
     WINDOW *mission = subwin(stdscr, 12, 45, 15, 55); 
     box(mission, 0, 0);
     attron(COLOR_PAIR(3));
     wbkgd(mission, COLOR_PAIR(3));
-    mvwprintw(mission, 0, 14, "Mission Board");
+    mvwprintw(mission, 0, 15, "Mission Board");
+    
 
     MAP M;
     // make snake Body 
@@ -795,8 +804,16 @@ int main()
     }
 
     if(gameover == true) {
-        GameOver(board);
+        WINDOW *gameover_win = subwin(stdscr, 24, 45, 3, 5);
+        box(gameover_win, 0, 0);
+        attron(COLOR_PAIR(6));
+        mvwprintw(gameover_win, 12, 23, "GAME OVER");
+        attroff(COLOR_PAIR(6));
+        wrefresh(gameover_win);
+        overlay(board, gameover_win);
+
         getch();
+        delwin(gameover_win);
     }
 
     getch(); // 사용자입력대기
