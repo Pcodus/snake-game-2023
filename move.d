@@ -1,1 +1,0 @@
-move.o: move.cpp
