@@ -112,10 +112,10 @@ int main()
     time_t currenttime;
     int itemSig = 5;
     int gateSig = 10;
-    int goal_snakeSize=3;
-    int goal_growthPoint=1;
-    int goal_poisonPoint=0;
-    int goal_gatePoint=0;
+    int goal_snakeSize=rand()%5 + 4;
+    int goal_growthPoint=rand()%4 + 3;
+    int goal_poisonPoint=rand()%3 + 2;
+    int goal_gatePoint=rand()%3 + 1;
 
     while (!gameover) {
         werase(board);
@@ -374,9 +374,9 @@ int main()
             snake.push_back({12,20});
             cur_dir = KEY_RIGHT; last_dir = 5;
             
-            goal_snakeSize=rand()%5 + 2;
-            goal_growthPoint=rand()%4 + 2;
-            goal_poisonPoint=rand()%3 + 1;
+            goal_snakeSize=rand()%5 + 4;
+            goal_growthPoint=rand()%4 + 3;
+            goal_poisonPoint=rand()%3 + 2;
             goal_gatePoint=rand()%3 + 1;
             maxsize = 3;
 
