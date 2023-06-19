@@ -112,15 +112,14 @@ int main()
     time_t currenttime;
     int itemSig = 5;
     int gateSig = 10;
-    int goal_snakeSize=rand()%5 + 5;
-    int goal_growthPoint=rand()%5 + 3;
-    int goal_poisonPoint=rand()%3 + 3;
-    int goal_gatePoint=rand()%3 + 1;
+    int goal_snakeSize=3;
+    int goal_growthPoint=1;
+    int goal_poisonPoint=0;
+    int goal_gatePoint=0;
 
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
-        
         
         // 맵 초기화
         for(int i = 1; i < 23; i++)
@@ -218,9 +217,9 @@ int main()
         }
 
         // 10초 지나면 Gate 제거
-        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++) {
+        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++)
             it->dur++;
-        }
+
         for (vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end();) {
             if (it->dur == 10000000/speed) {
                 M.map[level][it->gate1[0][0]][it->gate1[0][1]] = 1;
@@ -330,7 +329,6 @@ int main()
             break;
         }
 
-        // 
         if(maintainGate == true)
             maintainGate_tick++;
 
@@ -356,40 +354,49 @@ int main()
 
         // 승리 조건
         if(victory[0] && victory[1] && victory[2] && victory[3]) {
-            if(level == 3){
-                tmp = currenttime;
-                while(currenttime - tmp < 3){
-                    currenttime = time(NULL);
-                }
+            if(level == 3)
                 break;
-            }
             snake.erase(snake.begin(),snake.end());
+            for (vector<G>::iterator it = growitems.begin(); it != growitems.end();it++)
+                M.map[level][it->x][it->y] = 0;
             growitems.erase(growitems.begin(),growitems.end());
+            for (vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end();it++)
+                M.map[level][it->x][it->y] = 0;
             poisonitems.erase(poisonitems.begin(),poisonitems.end());
-            gatelist.erase(gatelist.begin(),gatelist.end());
+            if(gatelist.size()){
+                M.map[level][gatelist.begin()->gate1[0][0]][gatelist.begin()->gate1[0][1]] = 1;
+                M.map[level][gatelist.begin()->gate2[0][0]][gatelist.begin()->gate2[0][1]] = 1;
+                gatelist.erase(gatelist.begin(),gatelist.end());
+            }
 
             snake.push_back({12,22});
             snake.push_back({12,21});
             snake.push_back({12,20});
             cur_dir = KEY_RIGHT; last_dir = 5;
             
+            goal_snakeSize=rand()%5 + 2;
+            goal_growthPoint=rand()%4 + 2;
+            goal_poisonPoint=rand()%3 + 1;
+            goal_gatePoint=rand()%3 + 1;
             maxsize = 3;
+
             GamePoint[0] = 0; GamePoint[1] = 0; GamePoint[2] = 0;
             victory[0] = false; victory[1] = false; victory[2] = false; victory[3] = false;
             level++;
             tmp = currenttime;
-            while(currenttime - tmp < 3){
+            while(currenttime - tmp < 5){
                 currenttime = time(NULL);
             }
-            gateSig = 10; itemSig = 5;
+            tmp2= tmp = currenttime;
         }
     }
-
-
+    
     WINDOW *gameover_win = newwin(24, 45, 3, 5);
     wbkgd(gameover_win, COLOR_PAIR(6));
     attron(COLOR_PAIR(6));
-    mvwprintw(gameover_win, 12, 18, "GAME OVER");
+    if(gameover)
+        mvwprintw(gameover_win, 12, 18, "GAME OVER");
+    else mvwprintw(gameover_win, 12, 18, "GAME CLEAR!");
     attroff(COLOR_PAIR(6));
     wrefresh(gameover_win);
     refresh();
