@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 
-#define speed 150000
+#define speed 300000
 #define W 100
 #define H 30
 using namespace std;
@@ -268,20 +268,32 @@ int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& 
 }
 
 int MoveLAST(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate) {
-    switch(snake[0][0] - snake[1][0]) {
+    switch(snake[0][0] - snake[1][0] + snake[0][1] - snake[1][1]) {
         case 1:
-            return MoveDOWN(map,snake, usegate);
-        case -1:
-            return MoveUP(map,snake, usegate);
-        case 0:
             switch(snake[0][1] - snake[1][1]) {
                 case 1:
                     return MoveRIGHT(map,snake, usegate);
+                case 0:
+                    return MoveDOWN(map,snake, usegate);
+            }
+        case -1:
+            switch(snake[0][1] - snake[1][1]) {
                 case -1:
                     return MoveLEFT(map,snake, usegate);
+                case 0:
+                    return MoveUP(map,snake, usegate);
             }
         default:
-
+            switch(last_dir) {
+                case KEY_UP:
+                    return MoveUP(map,snake,usegate);
+                case KEY_DOWN:
+                    return MoveDOWN(map,snake,usegate);
+                case KEY_LEFT:
+                    return MoveLEFT(map,snake,usegate);
+                case KEY_RIGHT:
+                    return MoveRIGHT(map,snake,usegate);
+            }
     }
     return 0;
 }
@@ -341,15 +353,20 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
             break;
         }
     }
+    // 이동 끝나면 게이트 삭제
     int newdir;
-    if(snake[0][0]-- == 0) {
+    if(snake[0][0] == 0) {
         newdir = KEY_DOWN;
-    } else if(snake[0][0]++ == 23) {
+        snake[0][0]--;
+    } else if(snake[0][0] == 23) {
         newdir = KEY_UP;
-    } else if(snake[0][1]++ == 0) {
+        snake[0][0]++;
+    } else if(snake[0][1] == 0) {
         newdir = KEY_RIGHT;
-    } else if(snake[0][1]-- == 44) {
+        snake[0][1]++;
+    } else if(snake[0][1] == 44) {
         newdir = KEY_LEFT;
+        snake[0][1]--;
     } else {
         if(dir == KEY_UP) {
             if(map[level][(snake[0][0]-1)][snake[0][1]] == 1 || map[level][(snake[0][0]-1)][snake[0][1]] == 7) {
@@ -425,7 +442,6 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
             }
         }
     }
-    last_dir = newdir;
     return newdir;
 }
 
