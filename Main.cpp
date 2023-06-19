@@ -17,7 +17,7 @@ int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 bool gameover;
 int maxsize = 3;
-int level = 0;
+int level = 3;
 bool victory[4] = {false,false,false,false};
 bool signum = true;
 int GamePoint[3] = {0,0,0};
@@ -518,66 +518,18 @@ int main()
     time_t currenttime;
     int itemSig = 5;
 
-    int goal_snakeSize=rand()%5 + 5;
-    int goal_growthPoint=rand()%5 + 5;
-    int goal_poisonPoint=rand()%3 + 5;
-    int goal_gatePoint=rand()%3 + 1;
+    int goal_snakeSize=rand()%2 + 3;
+    int goal_growthPoint=rand()%1 + 1;
+    int goal_poisonPoint=rand()%1 + 0;
+    int goal_gatePoint=rand()%1 + 1;
 
     int gateSig = 10;
 
-    for(int i = 0; i < 24; i++) {
-            for(int j = 0; j < 45; j++) {
-                switch (M.map[level][i][j])
-                {
-                    case 0:
-                        wattron(board, COLOR_PAIR(2));
-                        mvwprintw(board, i, j, " ");
-                        wattroff(board, COLOR_PAIR(2));
-                        break;
-                    case 1:
-                        wattron(board, COLOR_PAIR(3));
-                        mvwprintw(board, i, j, " ");
-                        wattroff(board, COLOR_PAIR(3));
-                        break;
-                    case 2:
-                        wattron(board, COLOR_PAIR(3));
-                        mvwprintw(board, i, j, " ");
-                        wattroff(board, COLOR_PAIR(3));
-                        break;
-                    case 3:
-                        wattron(board, COLOR_PAIR(4));
-                        mvwprintw(board, i, j, "H");
-                        wattroff(board, COLOR_PAIR(4));
-                        break;
-                    case 4:
-                        wattron(board, COLOR_PAIR(4));
-                        mvwprintw(board, i, j, "O");
-                        wattroff(board, COLOR_PAIR(4));
-                        break;
-                    case 5:
-                        wattron(board, COLOR_PAIR(4));
-                        mvwprintw(board, i, j, "G");
-                        wattroff(board, COLOR_PAIR(4));
-                        break;
-                    case 6:
-                        wattron(board, COLOR_PAIR(4));
-                        mvwprintw(board, i, j, "P");
-                        wattroff(board, COLOR_PAIR(4));
-                        break;
-                    case 7:
-                        wattron(board, COLOR_PAIR(5));
-                        mvwprintw(board, i, j, " ");
-                        wattroff(board, COLOR_PAIR(5));
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
 
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
+        
         
         // 맵 초기화
         for(int i = 1; i < 23; i++)
@@ -792,12 +744,33 @@ int main()
         }
 
         // 승리 조건
-        if(victory[0] && victory[1] && victory[2] && victory[3]) {            
-            last_dir = 5; cur_dir = KEY_RIGHT;
+        if(victory[0] && victory[1] && victory[2] && victory[3]) {
+            if(level == 3){
+                tmp = currenttime;
+                while(currenttime - tmp < 3){
+                    currenttime = time(NULL);
+                }
+                break;
+            }
+            snake.erase(snake.begin(),snake.end());
+            growitems.erase(growitems.begin(),growitems.end());
+            poisonitems.erase(poisonitems.begin(),poisonitems.end());
+            gatelist.erase(gatelist.begin(),gatelist.end());
+
+            snake.push_back({12,22});
+            snake.push_back({12,21});
+            snake.push_back({12,20});
+            cur_dir = KEY_RIGHT; last_dir = 5;
+            
             maxsize = 3;
             GamePoint[0] = 0; GamePoint[1] = 0; GamePoint[2] = 0;
             victory[0] = false; victory[1] = false; victory[2] = false; victory[3] = false;
             level++;
+            tmp = currenttime;
+            while(currenttime - tmp < 3){
+                currenttime = time(NULL);
+            }
+            gateSig = 10; itemSig = 5;
         };
     }
 
