@@ -1,29 +1,28 @@
-#include <ncurses.h>
-#include <vector>
 #include "map.h"
 #include "gate.h"
+#include "item.h"
+#include "move.h"
+#include "global.h"
 #include <ctime>
 #include <cstdlib>
 #include <signal.h>
 #include <unistd.h>
-#include <iostream>
+#include <ncurses.h>
+#include <vector>
+using namespace std;
 
 #define speed 150000
 #define W 100
 #define H 30
-using namespace std;
 
+int level = 0;
 int last_dir = 5;
 int cur_dir = KEY_RIGHT;
-bool gameover;
-int maxsize = 3;
-int level = 0;
-bool victory[4] = {false,false,false,false};
-bool signum = true;
 int GamePoint[3] = {0,0,0};
 bool maintainGate;
 int maintainGate_tick = 0;
 
+<<<<<<< HEAD
 
 class G {
 public:
@@ -452,6 +451,12 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
     cur_dir = newdir;
     return newdir;
 }
+=======
+bool gameover;
+int maxsize = 3;
+bool victory[4] = {false,false,false,false};
+bool signum = true;
+>>>>>>> fecfdf7e8d5c6ced56194e68f0d4ebaafc520d1a
 
 void GameOver() {
     // GameOverBoard 생성
@@ -535,8 +540,8 @@ int main()
     int itemSig = 5;
     int gateSig = 10;
     int goal_snakeSize=rand()%5 + 5;
-    int goal_growthPoint=rand()%5 + 5;
-    int goal_poisonPoint=rand()%3 + 5;
+    int goal_growthPoint=rand()%5 + 3;
+    int goal_poisonPoint=rand()%3 + 3;
     int goal_gatePoint=rand()%3 + 1;
 
 
@@ -550,6 +555,16 @@ int main()
             for(int j = 1; j < 44; j++) {
                 if(M.map[level][i][j] != 1)
                     M.map[level][i][j] = 0;
+            }
+
+        for(int i = 1; i < 9; i++)
+            for(int j = 1; j < 44; j++) {
+                mvwprintw(score,i,j, " ");
+            }
+
+        for(int i = 1; i < 11; i++)
+            for(int j = 1; j < 44; j++) {
+               mvwprintw(mission,i,j, " ");
             }
 
         for (int i = 0; i < growitems.size(); i++)
@@ -754,8 +769,6 @@ int main()
             maintainGate = false;
             maintainGate_tick = 0;
         }
-
-
 
         // 패배 조건
         // 2. 벽에 부딪힘

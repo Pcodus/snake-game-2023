@@ -1,8 +1,11 @@
-
 #include <iostream>
+#include <ncurses.h>
+#include "global.h"
+
+#ifndef BOARD
+#define BOARD
 class MAP{
 public:
-    // Wall : 1, Immune Wall : 2
     int map[4][24][45] = {
         {
         {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
@@ -109,3 +112,5 @@ public:
     int mission[12][45];
     int score[10][45];
 };
+
+#endif

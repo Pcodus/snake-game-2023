@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 vector<G> growitems;
 vector<P> poisonitems;
 
@@ -45,3 +46,35 @@ void GeneratePoison(int map[][24][45]) {
         map[level][x][y] = 6;
     }
 }
+=======
+#include <vector>
+#include "map.h"
+#include "global.h"
+#include <iostream>
+using namespace std;
+
+#ifndef ITEM
+#define ITEM
+class G {
+public:
+    int x;
+    int y;
+    int dur;
+    G(int x, int y) : x(x), y(y) { dur = 0; };
+};
+class P {
+public:
+    int x;
+    int y;
+    int dur;
+    P(int x, int y) : x(x), y(y) { dur = 0; };
+};
+
+extern vector<G> growitems;
+extern vector<P> poisonitems;
+
+void GenerateGrowth(int map[][24][45]);
+void GeneratePoison(int map[][24][45]);
+
+#endif
+>>>>>>> fecfdf7e8d5c6ced56194e68f0d4ebaafc520d1a
