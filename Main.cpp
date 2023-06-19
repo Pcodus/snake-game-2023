@@ -390,16 +390,15 @@ int main()
     }
 
     if(gameover == true) {
-        WINDOW *gameover_win = subwin(stdscr, 24, 45, 3, 5);
-        box(gameover_win, 0, 0);
+        refresh();
+        WINDOW *gameover_win = newwin(24, 45, 3, 5);
+        wbkgd(gameover_win,COLOR_PAIR(1));
         attron(COLOR_PAIR(6));
         mvwprintw(gameover_win, 12, 23, "GAME OVER");
         attroff(COLOR_PAIR(6));
         wrefresh(gameover_win);
-        overlay(board, gameover_win);
-
+        refresh();
         getch();
-        delwin(gameover_win);
     }
 
     getch(); // 사용자입력대기
