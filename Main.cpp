@@ -18,7 +18,7 @@ int cur_dir = KEY_RIGHT;
 bool gameover;
 int maxsize = 3;
 int level = 0;
-bool victory[4] = {false, false, false, false};
+bool victory[4] = {false,false,false,false};
 bool signum = true;
 int GamePoint[3] = {0,0,0};
 bool maintainGate;
@@ -257,18 +257,11 @@ int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& 
     } else if(map[level][snake[0][0]][snake[0][1]] == 7) {
         GamePoint[2]++;
         int newdir = PassGate(map, snake, usegate, cur_dir);
-        // maintainGate++;
         for(int i = 1; i < snake.size(); i++) {
             tmp = snake[i];
             snake[i] = head;
             head = tmp;
-            // maintainGate++;
         }
-        // snake 꼬리가 gate2의  좌표에 갔을때
-        // if(maintainGate == snake.size()) {
-        //     map[level][][gate1[0][1]] = 1;
-        //     map[level][gate2[0][0]][gate2[0][1]] = 1;
-        // }
         return newdir;
     } else if(map[level][snake[0][0]][snake[0][1]] == 4) {
         return 9999;
@@ -542,6 +535,7 @@ int main()
         werase(board);
         box(board, 0, 0);
         
+        
         // 맵 초기화
         for(int i = 1; i < 23; i++)
             for(int j = 1; j < 44; j++) {
@@ -770,12 +764,33 @@ int main()
         }
 
         // 승리 조건
-        if(victory[0] && victory[1] && victory[2] && victory[3]) {            
-            last_dir = 5; cur_dir = KEY_RIGHT;
+        if(victory[0] && victory[1] && victory[2] && victory[3]) {
+            if(level == 3){
+                tmp = currenttime;
+                while(currenttime - tmp < 3){
+                    currenttime = time(NULL);
+                }
+                break;
+            }
+            snake.erase(snake.begin(),snake.end());
+            growitems.erase(growitems.begin(),growitems.end());
+            poisonitems.erase(poisonitems.begin(),poisonitems.end());
+            gatelist.erase(gatelist.begin(),gatelist.end());
+
+            snake.push_back({12,22});
+            snake.push_back({12,21});
+            snake.push_back({12,20});
+            cur_dir = KEY_RIGHT; last_dir = 5;
+            
             maxsize = 3;
             GamePoint[0] = 0; GamePoint[1] = 0; GamePoint[2] = 0;
             victory[0] = false; victory[1] = false; victory[2] = false; victory[3] = false;
             level++;
+            tmp = currenttime;
+            while(currenttime - tmp < 3){
+                currenttime = time(NULL);
+            }
+            gateSig = 10; itemSig = 5;
         };
     }
 
