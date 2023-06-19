@@ -21,6 +21,9 @@ int level = 0;
 bool victory[4] = {false, false, false, false};
 bool signum = true;
 int GamePoint[3] = {0,0,0};
+bool maintainGate;
+int maintainGate_tick = 0;
+
 
 class G {
 public:
@@ -254,11 +257,18 @@ int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& 
     } else if(map[level][snake[0][0]][snake[0][1]] == 7) {
         GamePoint[2]++;
         int newdir = PassGate(map, snake, usegate, cur_dir);
+        // maintainGate++;
         for(int i = 1; i < snake.size(); i++) {
             tmp = snake[i];
             snake[i] = head;
             head = tmp;
-        }   
+            // maintainGate++;
+        }
+        // snake 꼬리가 gate2의  좌표에 갔을때
+        // if(maintainGate == snake.size()) {
+        //     map[level][][gate1[0][1]] = 1;
+        //     map[level][gate2[0][0]][gate2[0][1]] = 1;
+        // }
         return newdir;
     } else if(map[level][snake[0][0]][snake[0][1]] == 4) {
         return 9999;
@@ -272,20 +282,32 @@ int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& 
 }
 
 int MoveLAST(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate) {
-    switch(snake[0][0] - snake[1][0]) {
+    switch(snake[0][0] - snake[1][0] + snake[0][1] - snake[1][1]) {
         case 1:
-            return MoveDOWN(map,snake, usegate);
-        case -1:
-            return MoveUP(map,snake, usegate);
-        case 0:
             switch(snake[0][1] - snake[1][1]) {
                 case 1:
                     return MoveRIGHT(map,snake, usegate);
+                case 0:
+                    return MoveDOWN(map,snake, usegate);
+            }
+        case -1:
+            switch(snake[0][1] - snake[1][1]) {
                 case -1:
                     return MoveLEFT(map,snake, usegate);
+                case 0:
+                    return MoveUP(map,snake, usegate);
             }
         default:
-            
+            switch(last_dir) {
+                case KEY_UP:
+                    return MoveUP(map,snake,usegate);
+                case KEY_DOWN:
+                    return MoveDOWN(map,snake,usegate);
+                case KEY_LEFT:
+                    return MoveLEFT(map,snake,usegate);
+                case KEY_RIGHT:
+                    return MoveRIGHT(map,snake,usegate);
+            }
     }
     return 0;
 }
@@ -334,6 +356,7 @@ void MakeGate(int map[][24][45]) {
 }
 
 int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate, int dir) {
+    maintainGate = true;
     for(vector<Gatepair>::iterator it = usegate.begin(); it != usegate.end(); it++) {
         if(it->gate1[0][0] == snake[0][0] && it->gate1[0][1] == snake[0][1]) {
             snake[0][0] = it->gate2[0][0];
@@ -346,14 +369,18 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
         }
     }
     int newdir;
-    if(snake[0][0]-- == 0) {
+    if(snake[0][0] == 0) {
         newdir = KEY_DOWN;
-    } else if(snake[0][0]++ == 23) {
+        snake[0][0]++;
+    } else if(snake[0][0] == 23) {
         newdir = KEY_UP;
-    } else if(snake[0][1]++ == 0) {
+        snake[0][0]--;
+    } else if(snake[0][1] == 0) {
         newdir = KEY_RIGHT;
-    } else if(snake[0][1]-- == 44) {
+        snake[0][1]++;
+    } else if(snake[0][1] == 44) {
         newdir = KEY_LEFT;
+        snake[0][1]--;
     } else {
         if(dir == KEY_UP) {
             if(map[level][(snake[0][0]-1)][snake[0][1]] == 1 || map[level][(snake[0][0]-1)][snake[0][1]] == 7) {
@@ -429,6 +456,7 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
             }
         }
     }
+    cur_dir = newdir;
     return newdir;
 }
 
@@ -509,57 +537,6 @@ int main()
     int goal_poisonPoint=rand()%3 + 5;
     int goal_gatePoint=rand()%3 + 1;
 
-
-
-    for(int i = 0; i < 24; i++) {
-        for(int j = 0; j < 45; j++) {
-            switch (M.map[level][i][j])
-            {
-                case 0:
-                    wattron(board, COLOR_PAIR(2));
-                    mvwprintw(board, i, j, " ");
-                    wattroff(board, COLOR_PAIR(2));
-                    break;
-                case 1:
-                    wattron(board, COLOR_PAIR(3));
-                    mvwprintw(board, i, j, " ");
-                    wattroff(board, COLOR_PAIR(3));
-                    break;
-                case 2:
-                    wattron(board, COLOR_PAIR(3));
-                    mvwprintw(board, i, j, " ");
-                    wattroff(board, COLOR_PAIR(3));
-                    break;
-                case 3:
-                    wattron(board, COLOR_PAIR(4));
-                    mvwprintw(board, i, j, "H");
-                    wattroff(board, COLOR_PAIR(4));
-                    break;
-                case 4:
-                    wattron(board, COLOR_PAIR(4));
-                    mvwprintw(board, i, j, "O");
-                    wattroff(board, COLOR_PAIR(4));
-                    break;
-                case 5:
-                    wattron(board, COLOR_PAIR(4));
-                    mvwprintw(board, i, j, "G");
-                    wattroff(board, COLOR_PAIR(4));
-                    break;
-                case 6:
-                    wattron(board, COLOR_PAIR(4));
-                    mvwprintw(board, i, j, "P");
-                    wattroff(board, COLOR_PAIR(4));
-                    break;
-                case 7:
-                    wattron(board, COLOR_PAIR(5));
-                    mvwprintw(board, i, j, " ");
-                    wattroff(board, COLOR_PAIR(5));
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
 
     while (!gameover) {
         werase(board);
@@ -651,8 +628,9 @@ int main()
         }
 
         // 10초 지나면 Gate 제거
-        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++)
+        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++) {
             it->dur++;
+        }
         for (vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end();) {
             if (it->dur == 10000000/speed) {
                 M.map[level][it->gate1[0][0]][it->gate1[0][1]] = 1;
@@ -761,6 +739,20 @@ int main()
             last_dir = MoveLAST(M.map, snake, gatelist);
             break;
         }
+
+        // 
+        if(maintainGate == true)
+            maintainGate_tick++;
+
+        if(maintainGate_tick == snake.size()) {
+            M.map[level][gatelist.begin()->gate1[0][0]][gatelist.begin()->gate1[0][1]] = 1;
+            M.map[level][gatelist.begin()->gate2[0][0]][gatelist.begin()->gate2[0][1]] = 1;
+            gatelist.erase(gatelist.begin());
+            maintainGate = false;
+            maintainGate_tick = 0;
+        }
+
+
 
         // 패배 조건
         // 2. 벽에 부딪힘
