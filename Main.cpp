@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 
-#define speed 300000
+#define speed 150000
 #define W 100
 #define H 30
 using namespace std;
@@ -254,7 +254,7 @@ int MoveRIGHT(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& 
             tmp = snake[i];
             snake[i] = head;
             head = tmp;
-        }   
+        }
         return newdir;
     } else if(map[level][snake[0][0]][snake[0][1]] == 4) {
         return 9999;
@@ -357,10 +357,10 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
     int newdir;
     if(snake[0][0] == 0) {
         newdir = KEY_DOWN;
-        snake[0][0]--;
+        snake[0][0]++;
     } else if(snake[0][0] == 23) {
         newdir = KEY_UP;
-        snake[0][0]++;
+        snake[0][0]--;
     } else if(snake[0][1] == 0) {
         newdir = KEY_RIGHT;
         snake[0][1]++;
@@ -442,6 +442,7 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
             }
         }
     }
+    cur_dir = newdir;
     return newdir;
 }
 
