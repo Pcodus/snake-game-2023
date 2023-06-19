@@ -21,6 +21,9 @@ int level = 0;
 bool victory[4] = {false,false,false,false};
 bool signum = true;
 int GamePoint[3] = {0,0,0};
+bool maintainGate;
+int maintainGate_tick = 0;
+
 
 class G {
 public:
@@ -65,6 +68,8 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
 void GameOver(WINDOW* board);
 void sig_alarm(int sig);
 
+
+
 int MoveUP(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate) {
     vector<int> tmp;
     vector<int> head = snake[0];
@@ -107,7 +112,9 @@ int MoveUP(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& use
     } else if(map[level][snake[0][0]][snake[0][1]] == 4) {
         return 9999;
     }
-    for(int i = 1; i < snake.size(); i++) {
+
+
+     for(int i = 1; i < snake.size(); i++) {
         tmp = snake[i];
         snake[i] = head;
         head = tmp;
@@ -342,6 +349,7 @@ void MakeGate(int map[][24][45]) {
 }
 
 int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& usegate, int dir) {
+    maintainGate = true;
     for(vector<Gatepair>::iterator it = usegate.begin(); it != usegate.end(); it++) {
         if(it->gate1[0][0] == snake[0][0] && it->gate1[0][1] == snake[0][1]) {
             snake[0][0] = it->gate2[0][0];
@@ -353,7 +361,6 @@ int PassGate(int map[][24][45], vector<vector<int> >& snake, vector<Gatepair>& u
             break;
         }
     }
-    // 이동 끝나면 게이트 삭제
     int newdir;
     if(snake[0][0] == 0) {
         newdir = KEY_DOWN;
@@ -517,13 +524,11 @@ int main()
     time_t tmp2 = time(NULL);  // 현재 시간을 저장
     time_t currenttime;
     int itemSig = 5;
-
-    int goal_snakeSize=rand()%2 + 3;
-    int goal_growthPoint=rand()%1 + 1;
-    int goal_poisonPoint=rand()%1 + 0;
-    int goal_gatePoint=rand()%1 + 1;
-
     int gateSig = 10;
+    int goal_snakeSize=rand()%5 + 5;
+    int goal_growthPoint=rand()%5 + 5;
+    int goal_poisonPoint=rand()%3 + 5;
+    int goal_gatePoint=rand()%3 + 1;
 
 
     while (!gameover) {
@@ -617,8 +622,9 @@ int main()
         }
 
         // 10초 지나면 Gate 제거
-        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++)
+        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++) {
             it->dur++;
+        }
         for (vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end();) {
             if (it->dur == 10000000/speed) {
                 M.map[level][it->gate1[0][0]][it->gate1[0][1]] = 1;
@@ -727,6 +733,20 @@ int main()
             last_dir = MoveLAST(M.map, snake, gatelist);
             break;
         }
+
+        // 
+        if(maintainGate == true)
+            maintainGate_tick++;
+
+        if(maintainGate_tick == snake.size()) {
+            M.map[level][gatelist.begin()->gate1[0][0]][gatelist.begin()->gate1[0][1]] = 1;
+            M.map[level][gatelist.begin()->gate2[0][0]][gatelist.begin()->gate2[0][1]] = 1;
+            gatelist.erase(gatelist.begin());
+            maintainGate = false;
+            maintainGate_tick = 0;
+        }
+
+
 
         // 패배 조건
         // 2. 벽에 부딪힘
