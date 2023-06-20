@@ -15,7 +15,7 @@ using namespace std;
 #define W 100
 #define H 30
 
-int level = 3;
+int level = 0;
 int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 int GamePoint[3] = {0,0,0};
