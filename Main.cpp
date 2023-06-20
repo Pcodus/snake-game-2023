@@ -11,7 +11,7 @@
 #include <vector>
 using namespace std;
 
-#define speed 150000
+#define speed 200000
 #define W 100
 #define H 30
 
@@ -24,24 +24,13 @@ int maintainGate_tick = 0;
 
 bool gameover;
 int maxsize = 3;
-bool victory[4] = {false,false,false,false};
+bool victory[4] = {false, false, false, false};
 bool signum = true;
 
 vector<G> growitems;
 vector<P> poisonitems;
 vector<Gatepair> gatelist;
 
-void GameOver() {
-    // GameOverBoard 생성
-    WINDOW *gameover = subwin(stdscr, 24, 45, 3, 5); 
-    box(gameover, 0, 0);
-    attron(COLOR_PAIR(6));
-    mvwprintw(gameover, 12, 23, "GAME OVER");
-    attroff(COLOR_PAIR(6));
-    wrefresh(gameover);
-    getch();
-    delwin(gameover);
-}
 
 void sig_alarm(int sig) {
     signum = false;
@@ -77,6 +66,8 @@ int main()
     init_pair(4, COLOR_BLACK, COLOR_WHITE);
     init_pair(5, COLOR_CYAN, COLOR_CYAN);
     init_pair(6, COLOR_RED, COLOR_BLACK);
+    init_pair(7, COLOR_MAGENTA, COLOR_BLACK);
+
 
     // ScoreBoard 생성
     WINDOW *score = subwin(stdscr, 10, 45, 3, 55); 
@@ -112,15 +103,14 @@ int main()
     time_t currenttime;
     int itemSig = 5;
     int gateSig = 10;
-    int goal_snakeSize=rand()%5 + 5;
-    int goal_growthPoint=rand()%5 + 3;
-    int goal_poisonPoint=rand()%3 + 3;
+    int goal_snakeSize=rand()%5 + 4;
+    int goal_growthPoint=rand()%4 + 3;
+    int goal_poisonPoint=rand()%3 + 2;
     int goal_gatePoint=rand()%3 + 1;
 
     while (!gameover) {
         werase(board);
         box(board, 0, 0);
-        
         
         // 맵 초기화
         for(int i = 1; i < 23; i++)
@@ -218,9 +208,9 @@ int main()
         }
 
         // 10초 지나면 Gate 제거
-        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++) {
+        for(vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end(); it++)
             it->dur++;
-        }
+
         for (vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end();) {
             if (it->dur == 10000000/speed) {
                 M.map[level][it->gate1[0][0]][it->gate1[0][1]] = 1;
@@ -330,7 +320,6 @@ int main()
             break;
         }
 
-        // 
         if(maintainGate == true)
             maintainGate_tick++;
 
@@ -356,41 +345,58 @@ int main()
 
         // 승리 조건
         if(victory[0] && victory[1] && victory[2] && victory[3]) {
-            if(level == 3){
-                tmp = currenttime;
-                while(currenttime - tmp < 3){
-                    currenttime = time(NULL);
-                }
+            if(level == 3)
                 break;
-            }
             snake.erase(snake.begin(),snake.end());
+            for (vector<G>::iterator it = growitems.begin(); it != growitems.end();it++)
+                M.map[level][it->x][it->y] = 0;
             growitems.erase(growitems.begin(),growitems.end());
+            for (vector<P>::iterator it = poisonitems.begin(); it != poisonitems.end();it++)
+                M.map[level][it->x][it->y] = 0;
             poisonitems.erase(poisonitems.begin(),poisonitems.end());
-            gatelist.erase(gatelist.begin(),gatelist.end());
+            if(gatelist.size()){
+                M.map[level][gatelist.begin()->gate1[0][0]][gatelist.begin()->gate1[0][1]] = 1;
+                M.map[level][gatelist.begin()->gate2[0][0]][gatelist.begin()->gate2[0][1]] = 1;
+                gatelist.erase(gatelist.begin(),gatelist.end());
+            }
 
             snake.push_back({12,22});
             snake.push_back({12,21});
             snake.push_back({12,20});
             cur_dir = KEY_RIGHT; last_dir = 5;
             
+            goal_snakeSize=rand()%5 + 4;
+            goal_growthPoint=rand()%4 + 3;
+            goal_poisonPoint=rand()%3 + 2;
+            goal_gatePoint=rand()%3 + 1;
             maxsize = 3;
+
             GamePoint[0] = 0; GamePoint[1] = 0; GamePoint[2] = 0;
             victory[0] = false; victory[1] = false; victory[2] = false; victory[3] = false;
             level++;
             tmp = currenttime;
-            while(currenttime - tmp < 3){
+            while(currenttime - tmp < 5){
                 currenttime = time(NULL);
             }
-            gateSig = 10; itemSig = 5;
+            tmp2= tmp = currenttime;
         }
     }
-
-
+    
     WINDOW *gameover_win = newwin(24, 45, 3, 5);
-    wbkgd(gameover_win, COLOR_PAIR(6));
-    attron(COLOR_PAIR(6));
-    mvwprintw(gameover_win, 12, 18, "GAME OVER");
-    attroff(COLOR_PAIR(6));
+
+    if(gameover) {
+        wbkgd(gameover_win, COLOR_PAIR(6));
+        attron(COLOR_PAIR(6));
+        mvwprintw(gameover_win, 12, 17, "<GAME OVER>");
+        attroff(COLOR_PAIR(6));
+    }
+    else {
+        wbkgd(gameover_win, COLOR_PAIR(7));
+        attron(COLOR_PAIR(7));
+        mvwprintw(gameover_win, 11, 17, "<GAME CLEAR>");
+        mvwprintw(gameover_win, 12, 15, "CONGRATULATION!!");
+        attroff(COLOR_PAIR(7));
+    }
     wrefresh(gameover_win);
     refresh();
 
