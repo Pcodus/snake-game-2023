@@ -46,27 +46,30 @@ int main()
     keypad(stdscr, true);
     srand(time(NULL));
 
+    // 사용할 색상 pair 선언
+    init_pair(1, COLOR_MAGENTA, COLOR_WHITE);
+    init_pair(2, COLOR_WHITE, COLOR_WHITE);
+    init_pair(3, COLOR_WHITE, COLOR_BLACK);
+    init_pair(4, COLOR_BLACK, COLOR_WHITE);
+    init_pair(5, COLOR_CYAN, COLOR_CYAN);
+    init_pair(6, COLOR_RED, COLOR_BLACK);
+    init_pair(7, COLOR_MAGENTA, COLOR_BLACK);
+
+
     // 전체 윈도우 생성
     WINDOW *back = subwin(stdscr, H, W, 0, 0);
-    init_pair(1, COLOR_MAGENTA, COLOR_WHITE); // 색attribute 설정
     box(stdscr, 0, 0); // 윈도우의 경계를 표현한다. 
     attron(COLOR_PAIR(1)); // Attribute 적용
     wbkgd(stdscr, COLOR_PAIR(1));
     attroff(COLOR_PAIR(1));
 
     // SnakeBoard 생성
-    init_pair(2, COLOR_WHITE, COLOR_WHITE);
     WINDOW *board = subwin(stdscr, 24, 45, 3, 5); 
     box(board, 0, 0);
     attron(COLOR_PAIR(2));
     wbkgd(board, COLOR_PAIR(2));
     attroff(COLOR_PAIR(2));
     
-    init_pair(3, COLOR_WHITE, COLOR_BLACK);
-    init_pair(4, COLOR_BLACK, COLOR_WHITE);
-    init_pair(5, COLOR_CYAN, COLOR_CYAN);
-    init_pair(6, COLOR_RED, COLOR_BLACK);
-    init_pair(7, COLOR_MAGENTA, COLOR_BLACK);
 
 
     // ScoreBoard 생성
@@ -213,9 +216,11 @@ int main()
 
         for (vector<Gatepair>::iterator it = gatelist.begin(); it != gatelist.end();) {
             if (it->dur == 10000000/speed) {
-                M.map[level][it->gate1[0][0]][it->gate1[0][1]] = 1;
-                M.map[level][it->gate2[0][0]][it->gate2[0][1]] = 1;
-                it = gatelist.erase(it);
+                if(maintainGate == false) {
+                    M.map[level][it->gate1[0][0]][it->gate1[0][1]] = 1;
+                    M.map[level][it->gate2[0][0]][it->gate2[0][1]] = 1;
+                    it = gatelist.erase(it);
+                }
             } else { ++it; }
         }
 
