@@ -11,11 +11,11 @@
 #include <vector>
 using namespace std;
 
-#define speed 200000
+#define speed 160000
 #define W 100
 #define H 30
 
-int level = 0;
+int level = 3;
 int last_dir = 5;
 int cur_dir = KEY_RIGHT;
 int GamePoint[3] = {0,0,0};
@@ -291,6 +291,7 @@ int main()
         wrefresh(mission);
         wrefresh(score);
         refresh();
+
         //시간 설정
         signum = true;
         ualarm(speed, 0);
@@ -325,6 +326,7 @@ int main()
             break;
         }
 
+        // snake가 gate를 통과한 후 gate 삭제
         if(maintainGate == true)
             maintainGate_tick++;
 
